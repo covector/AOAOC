@@ -304,6 +304,7 @@
 	\section{Evaluation}
 	\section{Conclusion}
 	\section{Future Direction}
+	\qquad \ This algorithm currently only focuses on discrete action space, a possible future direction might be extending this to continuous space. For vector actions, it might be good to attend to only some of the components of the vector, while ignoring other components by either randomly selecting values for them or keeping them the same as in the last state of the previous option. For scalar action, one direction is to use a one dimensional gaussian distribution as the attention mechanism, and multiply it with the original action distribution. However, some sort of trick may need to be deployed to speed up the process of normalization.
 	\section{Bibliography}
 	\bibliographystyle{ieeetr}
 	\bibliography{bibliography}
