@@ -90,7 +90,7 @@
 
 	\quad Many people argue that a good options should be diverse and localized \cite{khetarpal2020options}. One of the recent papers \cite{attentionoptioncritic} follows this assumption by requiring options to attend to different features of the state. This essay focus on extending this idea of abstraction from state to action. 
 	
-	\quad This essay will be structured as follows: First, preliminary and related work will be presented to give a context to what I am trying to do. Second, previous work will be analyzed to figure out why they work. Third, a framework will be proposed based on the observations made in the analysis. Forth, an algorithm will be derived from the framework. Finally, the algorithm will be evaluated in the Mujoco environment \cite{mujoco}.
+	\quad This essay will be structured as follows: First, preliminary and related work will be presented to give a context to what I am trying to do. Second, previous work will be analyzed to figure out why they work. Third, a framework will be proposed based on the observations made in the analysis. Forth, an algorithm will be derived from the framework. Finally, the algorithm will be evaluated in Four Room and the Mujoco environment \cite{mujoco}.
 	\section{Preliminary}
 	\qquad \ This section only acts as a summary. You are assumed to have basic knowledge about Hierarchical Reinforcement Learning.
 	\subsection*{Markov Decision Process}
@@ -130,7 +130,7 @@
 	\subsection*{Deliberation Cost}
 	\qquad \ Since optimal policy can be achieved even without using options, if options are trained only to maximize expected return, the options may slowly degenerate, which means they either terminate every steps or dominate. Deliberation Cost \cite{harb2017waiting} is a way to encourage longer option duration by punishing the option for every termination.
 	\subsection*{Interest Option-Critic}
-	\qquad \ The original Option-Critic assumes that options can be initiated everywhere, Interest Option-Critic \cite{khetarpal2020options} tries to remove this assumption by introducing interest functions $I:\mathcal{S} \times \Omega \rightarrow [0,1]$ as a approximation for the initiation set. Experimental results show that options learned by Interest Option-Critic is localized.
+	\qquad \ The original Option-Critic assumes that options can be initiated everywhere, Interest Option-Critic \cite{khetarpal2020options} tries to remove this assumption by introducing interest functions $I:\mathcal{S} \times \Omega \rightarrow [0,1]$ as an approximation for the initiation set. Experimental results show that options learned by Interest Option-Critic is localized.
 	\subsection*{Termination-Critic}
 	\qquad \ While other work in this section focus on improving Option-Critic by adding features to the algorithm, Termination-Critic \cite{harutyunyan2019termination} aims to change the objective of the termination function $\beta$. Instead of maximizing the expected return, $\beta$ is trained to minimize the entropy of the termination state. In other words, making the termination state more predictable.
 	\subsection*{Attention Option-Critic}
@@ -213,13 +213,13 @@
 	\quad All of the previous algorithms can be seen as an implementation of this framework. This framework is the abstraction of algorithms that produce localized options, so it is very useful in deriving a new algorithm in the next section.
 	\section{Attention-Over-Actions Option-Critic}
 	\qquad \ Now that there is a framework, I can just follow the framework and derive a new algorithm. The following algorithm will be called Attention-Over-Actions Option-Critic because it perform abstraction on the action space, this algorithm is mainly inspired by Attention Option-Critic.
-	\subsection*{Categorization}
+	\subsection*{1. Categorization}
 	\qquad \ In Attention Option-Critic, the Categorization step divide sub-tasks based on features needed, this works because each sub-task requires a different subset of features. The following algorithm borrow the idea of attention over state features and apply it to actions, so each option will attend to different sets of actions. The intuition for this is that each sub-task will not need to use all the actions, for example, when you are watching a film, you will not need to move your hands. This is essentially performing actions abstraction, since the option can attend to a subset of the actions.
-	\subsection*{Assignment}
+	\subsection*{2. Assignment}
 	\qquad \ The following algorithm assigns the sub-task in a similar way as Attention Option-Critic, an attention mechanism $h_{\omega,\phi}:\mathcal{A} \rightarrow [0,1]$ parameterized by $\phi$ will be given to each option. But instead of masking the state features, it masks the probability for choosing each actions. So the final probability $\pi_{h_\omega}$ for option $\omega$ to choose action $a$ will be: $$\pi_{h_\omega}(a|s) = \frac{\pi_{\omega,\theta}(a|s)h_{\omega, \phi}(a)}{\sum_{a'} \pi_{\omega,\theta}(a'|s)h_{\omega, \phi}(a')}$$ \qquad \ where $\pi_{\omega,\theta}$ is the internal policy of option $\omega$ and is parameterized by $\theta$.
 	
 	\quad $\pi_{h_\omega}$ can also be expressed in matrix form: $$\pi_{h_\omega}(s) = \frac{\pi_{\omega,\theta}(s)\odot h_{\omega, \phi}}{\pi_{\omega,\theta}(s)^\intercal h_{\omega, \phi}}$$ \qquad \ Where all of these are column matrix with each component corresponding to one action, and $\odot$ is the Hadamard product.
-	\subsection*{Optimization}
+	\subsection*{3. Optimization}
 	\qquad \ Optimization is probably the step that requires the most decision made when designing this algorithm, but luckily optimization of the attention mechanism and that of the option can designed separately.\vspace{0.2in}\\
 	{\bfseries Option Optimization}\vspace{0.05in}
 	
@@ -230,7 +230,8 @@
 	
 	\quad What I really want is for the option to accept the attention mechanism, instead of fighting it. I want the option to find the next best action provided that there is a constraint. So a better way to optimize the internal policy is to devalue the Q-value of the unattended actions, this way the option will not know that it can actually cheat the system by dividing the attention mechanism. One way to devalue the Q-value is to punish the policy for choosing an action that the option is not attending to. Just like Deliberation Cost, the reward $r$ is transformed into $\widetilde{r}$: $$\widetilde{r}(s,a)=r(s,a)-\rho_\omega(a)$$ \qquad \ It seems to me that the choice of the punishment $\rho_\omega$ can be arbitrary, as long as it is large when $h_{\omega,\phi}$ is small. So I will just choose it like this:$$\rho_\omega(a)=\xi R (1-(h_{\omega,\phi}(a))^n)$$ $$\textrm{where } R=\max_{s,a}r(s,a)-\min_{s,a}r(s,a)$$ $$ \textrm{and } n\geq 1\geq\xi>0$$
 	
-	\quad There is some intuition behind this definition. $n$ is for making sure that all actions with low attention will be treated almost the same, while actions with high attention will be treated differently even for a small difference. $R$ is an attempt to scale the punishment with the reward, so if all the rewards are suddenly doubled, the punishment will still have the same effect. $\xi$ can be interpreted as an exploratory constant, because this value scales the punishment, which can also be interpreted as the motivation to try actions that it is not attending to.
+	\quad There is some intuition behind this definition. $n$ is for making sure that all actions with low attention will be treated almost the same, while actions with high attention will be treated differently even for a small difference. $R$ is an attempt to scale the punishment with the reward, so if all the rewards are suddenly doubled, the punishment will still have the same effect. $\xi$ can be interpreted as an exploratory constant, because this value scales the punishment, which can also be interpreted as the motivation to try actions that it is not attending to. This punishment $
+	\rho$ will be called the Distraction because it is high when the option chooses actions it is not attending to.
 	
 	\quad Now we can learn expected return after choosing an action $\widetilde{Q}_U$ and expected return after choosing an option $\widetilde{Q}_\Omega$ to approximate the expected punished return:$$\widetilde{Q}_U(s,\omega,a) \leftarrow \widetilde{Q}_U(s,\omega,a) + \alpha(\widetilde{r} + \gamma(1-\beta_\omega(s'))\widetilde{Q}_\Omega(s',\omega)+\gamma \beta_\omega(s')\max_{\omega'} \widetilde{Q}_\Omega(s',\omega') - \widetilde{Q}_U(s,\omega,a))$$ $$\widetilde{Q}_\Omega(s,\omega)=\min_{\widetilde{Q}_\Omega} (\widetilde{Q}_\Omega(s,\omega)-\widetilde{G})^2$$ $$\textrm{where } \widetilde{G} \textrm{ is the punished return}$$
 	
@@ -254,10 +255,17 @@
 	
 	\quad For the third objective, I will minimize entropy in the attention mechanism. Entropy measures the uncertainty in a probability distribution, so $h$ must be normalized first. This actually also slightly optimize the forth objective since only attending to 1 actions have the lowest uncertainty.$$O_3 = \max_h <\frac{h}{||h||},\log \frac{h}{||h||}> \textnormal{ where log is elementwise}$$
 	
-	\quad For the forth objective, I will minimize the Minkowski distance of the attention mechanism. This is similar to minimizing the length of the attention mechanism, which discourage focusing on too many actions. Having $p<1$ is for making small values more prominent, which slightly optimize the third objective.$$O_4 = \min_h Mink(h,\vec{0}) \textnormal{ where Mink() is Minkowski distance with } p<1$$
+	\quad For the forth objective, I will minimize the Minkowski distance of the attention mechanism. This is similar to minimizing the length of the attention mechanism, which discourage focusing on too many actions. Having $p<1$ is for making small values more prominent, which slightly optimize the third objective.$$O_4 = \min_h ||h|| \textnormal{ where }||.||\textnormal{ is Minkowski distance with } p<1$$
 	
-	\subsection*{Selection}
+	\subsection*{4. Selection}
 	\qquad \ Any policy-over-options that favor higher Q-value actions will work in this case, because the option will need the right set of actions in order to perform well, just like in Attention Option-Critic, where option will need the right set of features in order to perform well, or else it will fail horribly. So policies like $\epsilon$-Greedy or Softmax policy should work for this algorithm.
+	
+	\subsection*{Intuition for this algorithm}
+	\qquad \ Option Framework is very similar to a construction site, options are the workers and actions are the tools. In this algorithm, each option pay attention to only a small set of actions and learn a policy that use them well. This can be drawn parallel with workers only focusing on learning a few tools and master them. Each worker will be responsible for a sub-task in a construction project, in other words, there will be division of labour. 
+	
+	\quad In this algorithm, the components in the attention mechanism are not binary and can take on any real numbers between 0 and 1. In the context of construction site, there are two interpretation for a non-integer focus on a tool. First it can be interpreted as the worker not trying hard enough when learning the tool. Interestingly, this interpretation is parallel to the first method suggested in the Optimization section: $\theta \leftarrow \theta + \alpha_\theta \nabla_\theta Q_\Omega(s,\omega)$. The worker have the incentive to learn a good tool even if he is not focusing on it, just like how the option have the incentive to use a good action even if it is not attending to it. The second interpretation is that the worker is given a weaker tool, this interpretation is parallel to the punishment method suggested in the Optimization section: $\widetilde{r}(s,a)=r(s,a)-\rho_\omega(a)$. The workers will not have the incentive to learn a tool that they are not focusing on, even if the normal version of the tool can bring a higher wage, because the worker is only given a weaker version of the tool.
+	
+	\quad One of the objectives that the attention mechanism need to optimize is the global Q-value $Q_U(s,\omega, a)$, while the option's internal policy optimizes a local Q-value $\widetilde{Q}_U(s, \omega, a)$. This can be drawn parallel with the manager in a construction project, since the manager usually see things from a broader perspective.
 	
 	\begin{algorithm}[H]
 	\caption{Pseudocode for Attention-Over-Actions Option-Critic (AOAOC)}
@@ -320,7 +328,7 @@
 	$h_{\omega,\phi}$ --- Attention Mechanism\\
 	$\pi_{h_\omega}$ --- Final probability\\
 	$\phi$ --- Parameter for attention mechanism\\
-	$\rho$ --- Punishment\\
+	$\rho$ --- Distraction\\
 	$R$ --- Difference between max and min reward\\
 	$n$ --- Power constant in $\rho$\\
 	$\xi$ --- Exploratory constant in $\rho$\\
@@ -336,7 +344,16 @@
 	$O_o$ --- Objective function\\
 	$w_o$ --- Weight of objective function\\
 	$o$ --- Objective\\
-	$\delta$ --- One step Q-value error
+	$\delta$ --- One step Q-value error\\
+	{\bfseries Operations}\\
+	$\odot$ --- Hadamard product (elementwise product)\\
+	$\nabla$ --- Gradient\\
+	$^\intercal$ --- Matrix transpose\\
+	$E[\ ]$ --- Expected value\\
+	$\leftarrow$ --- Assignment\\
+	$<,>$ --- Dot product\\
+	$||.||$ --- Norm of a vector unless specify\\
+	
 	\subsection*{Code}
 
 \end{document}
