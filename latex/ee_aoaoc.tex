@@ -283,7 +283,7 @@
 		\State Take action $a$ in $s$, observe $s'$, $r$\vspace{3mm}
 		\State \bfseries{1. Options evaluation:}
 		\State $\widetilde{r}_\omega\leftarrow r-\rho_\omega(a)$
-		\State $\delta \leftarrow \widetilde{r}_\omega - \widetilde{Q}_U(s,\omega,a)$
+		\State \normalfont $\delta \leftarrow \widetilde{r}_\omega - \widetilde{Q}_U(s,\omega,a)$
 		\If{$s'$ is non-terminal}
 		\State $\delta \leftarrow \delta+\gamma(1-\beta_\omega(s'))\widetilde{Q}_\Omega(s',\omega)+\gamma \beta_\omega(s')\max_{\omega'}\widetilde{Q}_\Omega(s',\omega')$
 		\EndIf
