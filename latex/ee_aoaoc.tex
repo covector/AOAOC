@@ -216,7 +216,7 @@
 	\begin{figure}[h]
 		\centering
 		\includegraphics[width=4in]{aoaoc.png}
-		\caption{Visualization of the interaction between the environment and the Attention-Over-Actions Option-Critic algorithm.}
+		\caption{Visualization of the interaction between the environment and the Attention-Over-Actions Option-Critic algorithm. Note that the state is ignored here for clearer presentation.}
 	\end{figure}
 	\subsection*{1. Categorization}
 	\qquad \ In Attention Option-Critic, the Categorization step divide sub-tasks based on features needed, this works because each sub-task requires a different subset of features. The following algorithm borrow the idea of attention over state features and apply it to actions, so each option will attend to different sets of actions. The intuition for this is that each sub-task will not need to use all the actions, for example, when you are watching a film, you will not need to move your hands. This is essentially performing actions abstraction, since the option can attend to a subset of the actions.
