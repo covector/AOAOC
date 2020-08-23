@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7440 64-bit) (preloaded format=pdflatex 2020.6.13)  22 AUG 2020 22:47
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7440 64-bit) (preloaded format=pdflatex 2020.6.13)  22 AUG 2020 23:42
 entering extended mode
 **./ee_aoaoc.tex
 (ee_aoaoc.tex
@@ -634,37 +634,35 @@ File: aoaoc.png Graphic file (type png)
 Package pdftex.def Info: aoaoc.png  used on input line 218.
 (pdftex.def)             Requested size: 289.07999pt x 180.66663pt.
  [6 <./aoaoc.png>] [7] [8] [9] (ee_aoaoc.bbl)
-Underfull \hbox (badness 10000) in paragraph at lines 313--363
+Underfull \hbox (badness 10000) in paragraph at lines 314--366
 
  []
 
 [10] [11] (ee_aoaoc.aux) ) 
 Here is how much of TeX's memory you used:
- 14297 strings out of 480797
- 280191 string characters out of 2911891
- 512883 words of memory out of 3000000
- 30036 multiletter control sequences out of 15000+200000
+ 14312 strings out of 480797
+ 280560 string characters out of 2911891
+ 513099 words of memory out of 3000000
+ 30051 multiletter control sequences out of 15000+200000
  537114 words of font info for 42 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
  60i,11n,60p,1308b,708s stack positions out of 5000i,500n,10000p,200000b,50000s
 <D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.
 pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><D:/MiKTeX 2.9/fon
 ts/type1/public/amsfonts/cm/cmbx9.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfont
-s/cm/cmex10.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cmextra/cmex7.pfb><D
-:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><D:/MiKTeX 2.9/fonts/typ
-e1/public/amsfonts/cm/cmmi5.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/c
-mmi7.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><D:/MiKTeX 2.9
-/fonts/type1/public/amsfonts/cm/cmr12.pfb><D:/MiKTeX 2.9/fonts/type1/public/ams
-fonts/cm/cmr5.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr7.pfb><D:/Mi
-KTeX 2.9/fonts/type1/public/amsfonts/cm/cmr9.pfb><D:/MiKTeX 2.9/fonts/type1/pub
-lic/amsfonts/cm/cmsy10.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy5.
-pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy7.pfb><D:/MiKTeX 2.9/font
-s/type1/public/amsfonts/cm/cmti10.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfont
-s/symbols/msam7.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/symbols/msbm10.p
-fb>
-Output written on ee_aoaoc.pdf (11 pages, 293596 bytes).
+s/cm/cmex10.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><D:/Mi
+KTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi5.pfb><D:/MiKTeX 2.9/fonts/type1/pu
+blic/amsfonts/cm/cmmi7.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.
+pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><D:/MiKTeX 2.9/font
+s/type1/public/amsfonts/cm/cmr7.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/
+cm/cmr9.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><D:/MiKTeX
+ 2.9/fonts/type1/public/amsfonts/cm/cmsy5.pfb><D:/MiKTeX 2.9/fonts/type1/public
+/amsfonts/cm/cmsy7.pfb><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti10.pfb
+><D:/MiKTeX 2.9/fonts/type1/public/amsfonts/symbols/msam7.pfb><D:/MiKTeX 2.9/fo
+nts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on ee_aoaoc.pdf (11 pages, 278606 bytes).
 PDF statistics:
- 126 PDF objects out of 1000 (max. 8388607)
+ 118 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  33 words of extra memory for PDF output out of 10000 (max. 10000000)
 

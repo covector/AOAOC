@@ -233,14 +233,12 @@
 	\quad I can now directly reuse the result from the Option-Critic paper, and only change $\pi_{\omega,\theta}$ to $\pi_{h_\omega}$: $$\nabla_\theta Q_\Omega(s,\omega) = E[\nabla_\theta \pi_{h_\omega}(a|s) Q_\omega(s,\omega,a)]$$
 	\qquad \ However, this is not desirable because the behavior of the optimal policy would not change, any policy can be achieved by simply dividing the attention mechanism and then normalize: $$\widetilde{\pi}_{\omega,\theta}(a|s) = \frac{\pi_{\omega,\theta}(a|s) }{h_{\omega, \phi}(a)\sum_{a'} (\pi_{\omega,\theta}(a'|s)/h_{\omega, \phi}(a'))}$$
 	
-	\quad What I really want is for the option to accept the attention mechanism, instead of fighting it. I want the option to find the next best action provided that there is a constraint. So a better way to optimize the internal policy is to devalue the Q-value of the unattended actions, this way the option will not know that it can actually cheat the system by dividing the attention mechanism. One way to devalue the Q-value is to punish the policy for choosing an action that the option is not attending to. Just like Deliberation Cost, the reward $r$ is transformed into a pseudo-reward $\widetilde{r}_\omega$: $$\widetilde{r}_\omega(s,a)=r(s,a)-\rho_\omega(a)$$ \qquad \ It seems to me that the choice of the punishment $\rho_\omega$ can be arbitrary, as long as it is large when $h_{\omega,\phi}$ is small. So I will just choose it like this:$$\rho_\omega(a)=\xi R (1-(h_{\omega,\phi}(a))^n)$$ $$\textrm{where } R=\max_{s,a}r(s,a)-\min_{s,a}r(s,a)$$ $$ \textrm{and } n\geq 1\geq\xi>0$$
+	\quad What I really want is for the option to accept the attention mechanism, instead of fighting against it. I want the option to find the next best action provided that there is a constraint. So a better way to optimize the internal policy is to devalue the Q-value of the unattended actions, this way the option will not know that it can actually cheat the system by dividing the attention mechanism. One way to devalue the Q-value is to punish the policy for choosing an action that the option is not attending to. Just like Deliberation Cost, the reward $r$ is transformed into a pseudo-reward $\widetilde{r}_\omega$: $$\widetilde{r}_\omega(s,a)=r(s,a)-\rho_\omega(a)$$ \qquad \ It seems to me that the choice of the punishment $\rho_\omega$ can be arbitrary, as long as it is large when $h_{\omega,\phi}$ is small. So I will just choose it like this:$$\rho_\omega(a)=\xi R (1-(h_{\omega,\phi}(a))^n)$$ $$\textrm{where } R=\max_{s,a}r(s,a)-\min_{s,a}r(s,a)$$ $$ \textrm{and } n\geq 1\geq\xi>0$$
 	
 	\quad There is some intuition behind this definition. $n$ is for making sure that all actions with low attention will be treated almost the same, while actions with high attention will be treated differently even for a small difference. $R$ is an attempt to scale the punishment with the reward, so if all the rewards are suddenly doubled, the punishment will still have the same effect. $\xi$ can be interpreted as an exploratory constant, because this value scales the punishment, which can also be interpreted as the motivation to try actions that it is not attending to. This punishment $
 	\rho$ will be called the Distraction because it is high when the option chooses actions it is not attending to.
 	
-	\quad Now we can learn expected return after choosing an action $\widetilde{Q}_U$ and expected return after choosing an option $\widetilde{Q}_\Omega$ to approximate the expected pseudo-return:$$\widetilde{Q}_U(s,\omega,a) \leftarrow \widetilde{Q}_U(s,\omega,a) + \alpha(\widetilde{r}_\omega + \gamma(1-\beta_\omega(s'))\widetilde{Q}_\Omega(s',\omega)+\gamma \beta_\omega(s')\max_{\omega'} \widetilde{Q}_\Omega(s',\omega') - \widetilde{Q}_U(s,\omega,a))$$ $$\widetilde{Q}_\Omega(s,\omega)=\min_{\widetilde{Q}_\Omega} (\widetilde{Q}_\Omega(s,\omega)-\widetilde{G})^2$$ $$\textrm{where } \widetilde{G} \textrm{ is the pseudo-return}$$
-	
-	\quad After we have the Q-value, we can train $\pi_{\omega,\theta}$ and $\beta{\omega, \nu}$ just like the original Option-Critic.\vspace{0.2in}\\
+	\quad Now we can learn expected return after choosing an action $\widetilde{Q}_U$ and expected return after choosing an option $\widetilde{Q}_\Omega$ to approximate the expected pseudo-return using Q-Learning. After we have the Q-values, we can train $\pi_{\omega,\theta}$ and $\beta{\omega, \nu}$ just like in the original Option-Critic.\vspace{0.2in}\\
 	{\bfseries Attention Mechanism Optimization}\vspace{0.05in}
 	
 	\quad Now let's consider the optimization of $h_{\omega,\phi}$. I want the categorization to be different for all options because or else all options will just aim for the sub-task with highest return. I also want the options to focus on as little actions as possible while still having acceptable performance. Essentially what I need is the algorithm to consider the trade-off between these objectives and achieve a balance between them. A nice way to do this is to add all of these objective up and then perform gradient ascent on the sum: $$\phi \leftarrow \phi + \alpha_\phi \nabla_\phi \sum_{o} (w_o O_o)$$ \qquad \ where $o$ is the index of an objective, $w_o$ is the weight of the objective, $O_o$ is the objective function.
@@ -254,7 +252,7 @@
 	
 	\qquad 4. Focus on small set of actions
 	
-	\quad For the first objective, I can just use $Q_\Omega(s,\omega)$ like in Attention Critic. This objective should be weighted less, or else it will start to include actions from other sub-task. $$O_1=\max_h Q_\Omega(s,\omega)$$
+	\quad For the first objective, I can just use $Q_\Omega(s,\omega)$ like in Attention Critic. Note that this objective uses the real Q-value instead of the pseudo-Q-value. $$O_1=\max_h Q_\Omega(s,\omega)$$
 	
 	\quad For the second objective, I will minimize cosine similarity just like in Attention Critic. Cosine similarity is desirable because magnitude doesn't matter, only the angle does. A small change in a short vector will correspond to a large change in the angle. While small change in a long vector will not change the angle much. Which means that the cosine similarity is more sensitive to large similar components. This is what we want because when we are comparing two attention mechanism, we only do not want both to have high attention on the same action, we don't care if both have low attention on the same action.$$O_2 = \min_h \sum_{h' \neq h} \frac{<h', h>}{||h'||+||h||}$$
 	
@@ -283,11 +281,14 @@
 		\State Take action $a$ in $s$, observe $s'$, $r$\vspace{3mm}
 		\State \bfseries{1. Options evaluation:}
 		\State $\widetilde{r}_\omega\leftarrow r-\rho_\omega(a)$
-		\State \normalfont $\delta \leftarrow \widetilde{r}_\omega - \widetilde{Q}_U(s,\omega,a)$
+		\State \normalfont $\widetilde{\delta} \leftarrow \widetilde{r}_\omega - \widetilde{Q}_U(s,\omega,a)$
+		\State \normalfont $\delta \leftarrow r - Q_U(s,\omega,a)$
 		\If{$s'$ is non-terminal}
-		\State $\delta \leftarrow \delta+\gamma(1-\beta_\omega(s'))\widetilde{Q}_\Omega(s',\omega)+\gamma \beta_\omega(s')\max_{\omega'}\widetilde{Q}_\Omega(s',\omega')$
+		\State $\widetilde{\delta} \leftarrow \widetilde{\delta}+\gamma(1-\beta_\omega(s'))\widetilde{Q}_\Omega(s',\omega)+\gamma \beta_\omega(s')\max_{\omega'}\widetilde{Q}_\Omega(s',\omega')$
+		\State $\delta \leftarrow \delta+\gamma(1-\beta_\omega(s'))Q_\Omega(s',\omega)+\gamma \beta_\omega(s')\max_{\omega'}Q_\Omega(s',\omega')$
 		\EndIf
-		\State $\widetilde{Q}_U(s,\omega,a)\leftarrow \widetilde{Q}_U(s,\omega,a) + \alpha \delta$
+		\State $\widetilde{Q}_U(s,\omega,a)\leftarrow \widetilde{Q}_U(s,\omega,a) + \widetilde{\alpha} \widetilde{\delta}$
+		\State $Q_U(s,\omega,a)\leftarrow Q_U(s,\omega,a) + \alpha \delta$
 		\vspace{3mm}
 		\State {\bfseries1. Options improvement:}
 		\State $\theta \leftarrow \theta + \alpha_\theta \nabla_\theta \log \pi_{h_\omega}(a|s)\widetilde{Q}_U(s,\omega,a)$
@@ -343,7 +344,8 @@
 	$\widetilde{Q}_U$ --- Expected pseudo-return from choosing an action\\
 	$\widetilde{Q}_\Omega$ --- Expected pseudo-return from choosing an option\\
 	$\widetilde{V}_\Omega$ --- Expected pseudo-return for being in a state\\
-	$\alpha$ --- Learning rate for $\widetilde{Q}_U$\\
+	$\widetilde{\alpha}$ --- Learning rate for $\widetilde{Q}_U$\\
+	$\alpha$ --- Learning rate for $Q_U$\\
 	$\alpha_\theta$ --- Learning rate for internal policy\\
 	$\alpha_\nu$ --- Learning rate for termination probability\\
 	$\alpha_\phi$ --- Learning rate for attention mechanism\\
@@ -352,6 +354,7 @@
 	$w_o$ --- Weight of objective function\\
 	$o$ --- Objective\\
 	$\delta$ --- One step Q-value error\\
+	$\widetilde{\delta}$ --- One step pseudo-Q-value error\\
 	{\bfseries Operations}\\
 	$\odot$ --- Hadamard product (elementwise product)\\
 	$\nabla$ --- Gradient\\
@@ -360,7 +363,8 @@
 	$\leftarrow$ --- Assignment\\
 	$<,>$ --- Dot product\\
 	$||.||$ --- Norm of a vector unless specify\\
-	
+	\subsection*{Proof}
+	\subsection*{Experimental Details}
 	\subsection*{Code}
 
 \end{document}
