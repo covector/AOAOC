@@ -23,7 +23,21 @@ w           w
 w     w     w
 wwwwwwwwwwwww
 """
-
+#         layout = """\
+# wwwwwwwwwwwww
+# w           w
+# w     w     w
+# w     w     w
+# w     w     w
+# w     w     w
+# w wwwww     w
+# w     wwwww w
+# w     w     w
+# w     w     w
+# w     w     w
+# w           w
+# wwwwwwwwwwwww
+# """
 
         self.occupancy = np.array([list(map(lambda c: 1 if c=='w' else 0, line)) for line in layout.splitlines()])
 
@@ -74,8 +88,11 @@ wwwwwwwwwwwww
     #     return state
 
 
-    def reset(self):
-        state = self.rng_init_state.choice(self.init_states)
+    def reset(self, test=None):
+        if test:
+            state=test
+        else:
+            state = self.rng_init_state.choice(self.init_states)
         self.currentcell = self.tocell[state]
         return state
 
@@ -87,12 +104,13 @@ wwwwwwwwwwwww
         except the goal state which has a reward of +50.
         """
 
-        reward = 0
+        reward = -2
         if self.rng.uniform() < 1/3:
             empty_cells = self.empty_around(self.currentcell)
             nextcell = empty_cells[self.rng.randint(len(empty_cells))]
         else:
             nextcell = tuple(self.currentcell + self.directions[action])
+
 
         if not self.occupancy[nextcell]:
             self.currentcell = nextcell
