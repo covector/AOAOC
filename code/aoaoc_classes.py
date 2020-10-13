@@ -460,7 +460,7 @@ class Q_O:
         self.weights[traject[0][0],traject[0][1]] += self.lr*tderror
 
 #=======Standard=======
-#Follow the code standard of the ioc repository
+# Follow the code standard of the ioc repository
 class Tabular:
     def __init__(self, nstates):
         self.nstates = nstates
@@ -470,36 +470,3 @@ class Tabular:
 
     def __len__(self):
         return self.nstates
-
-#Replace the command line argparse
-class Arguments:
-    def __init__(self):
-            self.discount=0.99
-            self.lr_term=0.1
-            self.lr_intra=0.25
-            self.lr_critic=0.5
-            self.lr_critic_pseudo=0.5
-            self.lr_criticA=0.5
-            self.lr_criticA_pseudo=0.5
-            self.lr_attend=0.02
-            self.h_learn=False
-            self.xi=1.
-            self.n=0.5
-            self.epsilon=1e-1
-            self.nepisodes=4000
-            self.nruns=1
-            self.nsteps=2000
-            self.noptions=3
-            self.baseline=True
-            self.temperature=1.
-            self.seed=2222
-            self.seed_startstate=1111
-            self.dc = 0.1
-            self.wo1 = 1.   #q
-            self.wo2 = 2.    #cosim
-            self.wo3 = 2.    #entropy
-            self.wo4 = 5.    #size
-            self.wo4p = 2
-            self.clipthres = 0.1
-            self.stretchthres = 1.
-            self.stretchstep = 1.

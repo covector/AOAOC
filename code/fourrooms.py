@@ -1,52 +1,66 @@
+'''
+This code is taken directly from the ioc repository, with little modification.
+'''
 #Environment File for Classic Fourrooms Grid World
 import numpy as np
-import gym
-from gym import core, spaces
-from gym.envs.registration import register
+# import gym
+# from gym import core, spaces
+# from gym.envs.registration import register
 from random import uniform
 
 #class Fourrooms(gym.Env):
 class Fourrooms():
-    def __init__(self,initstate_seed):
-        layout = """\
-wwwwwwwwwwwww
-w     w     w
-w     w     w
-w           w
-w     w     w
-w     w     w
-ww wwww     w
-w     www www
-w     w     w
-w     w     w
-w           w
-w     w     w
-wwwwwwwwwwwww
-"""
-#         layout = """\
+    def __init__(self, initstate_seed, punishEachStep, deterministic):
+        self.punishEachStep = punishEachStep
+        self.deterministic = deterministic
+
+#         self.layout = """\
 # wwwwwwwwwwwww
-# w           w
-# w     w     w
-# w     w     w
-# w     w     w
-# w     w     w
-# w wwwww     w
-# w     wwwww w
-# w     w     w
 # w     w     w
 # w     w     w
 # w           w
+# w     w     w
+# w     w     w
+# ww wwww     w
+# w     www www
+# w     w     w
+# w     w     w
+# w           w
+# w     w     w
 # wwwwwwwwwwwww
 # """
+        self.layout = """\
+wwwwwwwwwwwww
+w           w
+w     w     w
+w     w     w
+w     w     w
+w     w     w
+w wwwww     w
+w     wwwww w
+w     w     w
+w     w     w
+w     w     w
+w           w
+wwwwwwwwwwwww
+"""
 
         self.occupancy = np.array([list(map(lambda c: 1 if c=='w' else 0, line)) for line in layout.splitlines()])
 
         # Action Space: from any state the agent can perform one of the four actions; Up, Down, Left and Right
-        self.action_space = spaces.Discrete(4)
+        # self.action_space = spaces.Discrete(4)
+        self.action_space = 4
 
         # Observation Space
-        self.observation_space = spaces.Discrete(np.sum(self.occupancy == 0))
+        # self.observation_space = spaces.Discrete(np.sum(self.occupancy == 0))
+        self.observation_space = int(np.sum(self.occupancy == 0))
 
+'''
+0 - Up
+1 - Down
+2 - Left
+3 - Right
+'''
         self.directions = [np.array((-1,0)), np.array((1,0)), np.array((0,-1)), np.array((0,1))]
 
         self.rng = np.random.RandomState(1234)
@@ -56,7 +70,7 @@ wwwwwwwwwwwww
 
         self.tostate = {}
 
-        self.occ_dict = dict(zip(range(self.observation_space.n),
+        self.occ_dict = dict(zip(range(self.observation_space),
                                  np.argwhere(self.occupancy.flatten() == 0).squeeze()))
 
 
@@ -70,13 +84,13 @@ wwwwwwwwwwwww
         self.tocell = {v:k for k,v in self.tostate.items()}
 
         self.goal = 62
-        self.init_states = list(range(self.observation_space.n))
+        self.init_states = list(range(self.observation_space))
         self.init_states.remove(self.goal)
 
 
     def empty_around(self, cell):
         avail = []
-        for action in range(self.action_space.n):
+        for action in range(self.action_space):
             nextcell = tuple(cell + self.directions[action])
             if not self.occupancy[nextcell]:
                 avail.append(nextcell)
@@ -97,15 +111,8 @@ wwwwwwwwwwwww
         return state
 
     def step(self, action):
-        """
-        The agent can perform one of four actions,
-        up, down, left or right, which have a stochastic effect. 
-        We consider a case in which rewards are zero on all state transitions 
-        except the goal state which has a reward of +50.
-        """
-
-        reward = -2
-        if self.rng.uniform() < 1/3:
+        reward = -2 * punishEachStep
+        if self.rng.uniform() < 1/3 and not(deterministic):
             empty_cells = self.empty_around(self.currentcell)
             nextcell = empty_cells[self.rng.randint(len(empty_cells))]
         else:
@@ -123,9 +130,9 @@ wwwwwwwwwwwww
         done = state == self.goal
         return state, reward, float(done), None
 
-    register(
-        id='Fourrooms-v0',
-        entry_point='fourrooms:Fourrooms',
-        max_episode_steps=20000,
-        reward_threshold=1,
-    )
+    # register(
+    #     id='Fourrooms-v0',
+    #     entry_point='fourrooms:Fourrooms',
+    #     max_episode_steps=20000,
+    #     reward_threshold=1,
+    # )
