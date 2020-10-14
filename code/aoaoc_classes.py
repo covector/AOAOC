@@ -50,23 +50,24 @@ class Option:
 
     def _Q_update(self, traject, reward, done, termination):
         self.Qval.update(traject, reward, done, termination)
-        self.PQval.update(traject, self.distraction.reward(reward, traject[2]), done, termination)
+        self.PQval.update(traject, self.distract(reward, traject[2]), done, termination)
 
     def _H_update(self, traject):
-        self.policy.H_update(traject)
+        qVal = self.Qval.value(traject[0][0], traject[2])
+        self.policy.H_update(traject, qVal)
 
-    def _B_update(self, phi, option):
-        self.termination.update(phi, option)
+    def _B_update(self, phi, option, advantage):
+        self.termination.update(phi, option, advantage)
 
     def _P_update(self, traject, baseline):
         # self.policy.P_update(traject, self.policy_over_options.value(traject[0][0], traject[0][1], pseudo=True))
         self.policy.P_update(traject, baseline)
 
-    def update(self, traject, reward, done, phi, option, termination, baseline):
+    def update(self, traject, reward, done, phi, option, termination, baseline, advantage):
         self._Q_update(traject, reward, done, termination)
         self._H_update(traject)
         self._P_update(traject, baseline)
-        self._B_update(phi, option)
+        self._B_update(phi, option, advantage)
 
 #=======Final Policy=======
 class FinalPolicy:
@@ -75,7 +76,7 @@ class FinalPolicy:
         self.nactions = nactions
         self.internalPI = SoftmaxPolicy(rng, nfeatures, nactions, args, qWeightp)
         #=======predefine attention?========
-        self.attention = SigmoidAttention(nactions, args, R, qWeight)
+        self.attention = SigmoidAttention(nactions, args, R, qWeight, index)
         # self.attention = PredefinedAttention(index)
         #===================================
 
@@ -88,8 +89,8 @@ class FinalPolicy:
     def sample(self, phi):
         return int(self.rng.choice(self.nactions, p=self.pmf(phi)))
 
-    def H_update(self, traject):
-        self.attention.update(traject, self.pmf(traject[0][0]))
+    def H_update(self, traject, qVal):
+        self.attention.update(traject, self.pmf(traject[0][0]), qVal)
         # print(self.attention.pmf())
         # self.attention.regulate(o)
         # self.attention.normalize()
@@ -98,7 +99,7 @@ class FinalPolicy:
         self.internalPI.update(traject, baseline)
 
     def distract(self, reward, action):
-        self.attention.distract(reward, action)
+        return self.attention.distract(reward, action)
 
 #=======Internal Policy=======
 class SoftmaxPolicy:
@@ -132,7 +133,7 @@ class SoftmaxPolicy:
 
 #=======Attention=======
 class Attention:
-    def __init__(self, args):
+    def __init__(self, args, R):
         self.xi = args.xi
         self.R = R
         self.n = args.n
@@ -151,8 +152,8 @@ class Attention:
 
 
 class SigmoidAttention(Attention):
-    def __init__(self, nactions, args, R, qWeight):
-        super().__init__(self, args)
+    def __init__(self, nactions, args, R, qWeight, index):
+        super().__init__(args, R)
         self.weights = np.random.uniform(low=-1, high=1, size=(nactions,))
         self.qWeight = qWeight
         self.lr = args.lr_attend
@@ -175,9 +176,9 @@ class SigmoidAttention(Attention):
     def attention(self, a):
         return self.pmf()[a]
 
-    def update(self, traject, finalPmf):
+    def update(self, traject, finalPmf, qVal):
         hPmf = self.pmf()
-        gradList = [self.o1.grad(traject[0][0], traject[2], hPmf, finalPmf), self.o2.grad(hPmf), self.o3.grad(hPmf), self.o4.grad(hPmf)]
+        gradList = [self.o1.grad(traject[0][0], traject[2], hPmf, finalPmf, qVal), self.o2.grad(hPmf), self.o3.grad(hPmf), self.o4.grad(hPmf)]
         # self.weights += self.lr * np.sum(gradList, axis=0) * self._grad()
         self.weights += self.lr * np.sum(np.clip(gradList,-5,5), axis=0) * self._grad()
         for i in range(len(self.weights)):
@@ -205,21 +206,23 @@ class SigmoidAttention(Attention):
 
 class PredefinedAttention(Attention):
     def __init__(self, args, index):
-        super().__init__(self, args)
-        # if (index==0):
-        #     self.weights = np.array([1, 0.01, 0.01, 1])
-        # if (index==1):
-        #     self.weights = np.array([0.01, 1, 0.01, 1])
-        # if (index==2):
-        #     self.weights = np.array([0.01, 1, 1, 0.01])
-        # if (index==3):
-        #     self.weights = np.array([1, 0.01, 1, 0.01])
+        super().__init__(args, R)
         if (index==0):
-            self.weights = np.array([0.01, 1, 0.01, 1])
-        if (index==1):
             self.weights = np.array([1, 0.01, 0.01, 1])
+        if (index==1):
+            self.weights = np.array([0.01, 1, 0.01, 1])
         if (index==2):
-            self.weights = np.array([0.01, 0.01, 1, 0.01])
+            self.weights = np.array([0.01, 1, 1, 0.01])
+        if (index==3):
+            self.weights = np.array([1, 0.01, 1, 0.01])
+
+        # if (index==0):
+        #     self.weights = np.array([0.01, 1, 0.01, 1])
+        # if (index==1):
+        #     self.weights = np.array([1, 0.01, 0.01, 1])
+        # if (index==2):
+        #     self.weights = np.array([0.01, 0.01, 1, 0.01])
+
         # if (index==0):
         #     self.weights = np.ones((4))
         # if (index==1):
@@ -233,7 +236,7 @@ class PredefinedAttention(Attention):
     def attention(self, a):
         return self.pmf()[a]
 
-    def update(self, traject, gradList):
+    def update(self, traject, finalPmf, qVal):
         pass
 
     # def regulate(self, o):
@@ -254,11 +257,9 @@ class Objective:
 class ValueObj(Objective):
     def __init__(self, args):
         super().__init__(args.wo1)
-        self.Qval = Qval
-        self.final = final
 
-    def grad(self, phi, a, hPmf, finalPmf):
-        return self.weight * ((finalPmf + 1)/hPmf[a]) * self.Qval.value(phi,a)
+    def grad(self, phi, a, hPmf, finalPmf, qVal):
+        return self.weight * ((finalPmf + 1)/hPmf[a]) * qVal
 
     def loss(self):
         pass
@@ -312,11 +313,11 @@ class EntropyObj(Objective):
             term1 = (1.+np.log(normh[i]))/normalizer
             term2 = np.sum([(1.+np.log(normh[index]))*hPmf[index]/(normalizer**2) for index in range(len(hPmf))])
             # print(term2)
-            gradient.append((term1-term2)*(self.loss()-0.69))
+            gradient.append((term1-term2)*(self.loss(hPmf)-0.69))
         # print(gradient)
         return self.weight * np.array(gradient)
 
-    def loss(self):
+    def loss(self, hPmf):
         normalizer = np.linalg.norm(hPmf)
         normh = hPmf/normalizer
         return -1*np.sum(normh * np.log(normh))
@@ -329,7 +330,7 @@ class LengthObj(Objective):
 
     def grad(self, hPmf):
         # return 0.
-        return -1 * self.weight * np.power(hPmf / self.loss(), self.p-1) * (self.loss()-1.2)
+        return -1 * self.weight * np.power(hPmf / self.loss(hPmf), self.p-1) * (self.loss(hPmf)-1.2)
     
     def loss(self, hPmf):
         return pow(np.sum(np.power(hPmf, self.p)), 1./self.p)
@@ -339,7 +340,7 @@ class SigmoidTermination:
     def __init__(self, rng, nfeatures, args):
         self.rng = rng
         self.weights = np.zeros((nfeatures,))
-        self.lr = args.lr
+        self.lr = args.lr_term
         self.dc = args.dc
 
     def pmf(self, phi):
@@ -372,7 +373,7 @@ class Q_U:
     def value(self, phi, action):
         return np.sum(self.weights[phi, action], axis=0)
 
-    def update(self, traject, reward, done, termination, value):
+    def update(self, traject, reward, done, termination):
         # One-step update target
         update_target = reward
         if not done:
@@ -389,8 +390,8 @@ class POO:
         self.weights = np.zeros((nfeatures, args.noptions))
         self.weightsP = np.zeros((nfeatures, args.noptions))
         self.policy = EgreedyPolicy(rng, nfeatures, args, self.weights)
-        self.Q_Omega = Q_O(nfeatures, self.weights, False)
-        self.Q_OmegaP = Q_O(nfeatures, self.weightsP, True)
+        self.Q_Omega = Q_O(args, self.weights, False)
+        self.Q_OmegaP = Q_O(args, self.weightsP, True)
 
     def update(self, traject, reward, distracted, done, termination):
         self.Q_Omega.update(traject, reward, done, termination)

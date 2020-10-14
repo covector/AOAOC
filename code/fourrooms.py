@@ -9,7 +9,7 @@ import numpy as np
 from random import uniform
 
 #class Fourrooms(gym.Env):
-class Fourrooms():
+class Fourrooms:
     def __init__(self, initstate_seed, punishEachStep, deterministic):
         self.punishEachStep = punishEachStep
         self.deterministic = deterministic
@@ -45,7 +45,7 @@ w           w
 wwwwwwwwwwwww
 """
 
-        self.occupancy = np.array([list(map(lambda c: 1 if c=='w' else 0, line)) for line in layout.splitlines()])
+        self.occupancy = np.array([list(map(lambda c: 1 if c=='w' else 0, line)) for line in self.layout.splitlines()])
 
         # Action Space: from any state the agent can perform one of the four actions; Up, Down, Left and Right
         # self.action_space = spaces.Discrete(4)
@@ -55,12 +55,13 @@ wwwwwwwwwwwww
         # self.observation_space = spaces.Discrete(np.sum(self.occupancy == 0))
         self.observation_space = int(np.sum(self.occupancy == 0))
 
-'''
-0 - Up
-1 - Down
-2 - Left
-3 - Right
-'''
+
+        # 0 - Up
+        # 1 - Down
+        # 2 - Left
+        # 3 - Right
+
+
         self.directions = [np.array((-1,0)), np.array((1,0)), np.array((0,-1)), np.array((0,1))]
 
         self.rng = np.random.RandomState(1234)
@@ -111,8 +112,8 @@ wwwwwwwwwwwww
         return state
 
     def step(self, action):
-        reward = -2 * punishEachStep
-        if self.rng.uniform() < 1/3 and not(deterministic):
+        reward = -2 * self.punishEachStep
+        if self.rng.uniform() < 1/3 and not(self.deterministic):
             empty_cells = self.empty_around(self.currentcell)
             nextcell = empty_cells[self.rng.randint(len(empty_cells))]
         else:
