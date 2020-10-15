@@ -10,9 +10,10 @@ from random import uniform
 
 #class Fourrooms(gym.Env):
 class Fourrooms:
-    def __init__(self, initstate_seed, punishEachStep, deterministic):
+    def __init__(self, initstate_seed, punishEachStep, deterministic, modified):
         self.punishEachStep = punishEachStep
         self.deterministic = deterministic
+        self.modified = modified
 
 #         self.layout = """\
 # wwwwwwwwwwwww
@@ -92,7 +93,7 @@ wwwwwwwwwwwww
     def empty_around(self, cell):
         avail = []
         for action in range(self.action_space):
-            nextcell = tuple(cell + self.directions[action])
+            nextcell = tuple(cell + np.multiply(self.directions[action], self.inQuad24(self.currentcell)))
             if not self.occupancy[nextcell]:
                 avail.append(nextcell)
         return avail
@@ -112,12 +113,12 @@ wwwwwwwwwwwww
         return state
 
     def step(self, action):
-        reward = -2 * self.punishEachStep
+        reward = -2 * int(self.punishEachStep)
         if self.rng.uniform() < 1/3 and not(self.deterministic):
             empty_cells = self.empty_around(self.currentcell)
             nextcell = empty_cells[self.rng.randint(len(empty_cells))]
         else:
-            nextcell = tuple(self.currentcell + self.directions[action])
+            nextcell = tuple(self.currentcell + np.multiply(self.directions[action], self.inQuad24(self.currentcell)))
 
 
         if not self.occupancy[nextcell]:
@@ -130,6 +131,17 @@ wwwwwwwwwwwww
 
         done = state == self.goal
         return state, reward, float(done), None
+
+    def inQuad24(self, cell):
+        if not(self.modified):
+            return np.array([1,1])
+        if cell[1] > 6:
+            if cell[0] < 7:
+                return np.array([1, -1])
+        else:
+            if cell[0] > 6:
+                return np.array([1, -1])
+        return np.array([1, 1])
 
     # register(
     #     id='Fourrooms-v0',

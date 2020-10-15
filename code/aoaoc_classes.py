@@ -4,8 +4,7 @@ This code is based on the ioc repository [13]
 
 import numpy as np
 from fourrooms import Fourrooms
-from scipy.special import logsumexp
-from scipy.special import expit
+from scipy.special import logsumexp, expit, softmax
 
 '''
 =======CLASS MAP=======
@@ -31,7 +30,7 @@ class Option:
     def __init__(self, rng, nfeatures, nactions, args, R, policy_over_options, index):
         self.weights = np.zeros((nfeatures, nactions)) 
         self.weightsP = np.zeros((nfeatures, nactions)) 
-        self.policy = FinalPolicy(rng, nfeatures, nactions, args, R, self.weights, self.weightsP, index)
+        self.policy = FinalPolicy(rng, nfeatures, nactions, args, R, self.weightsP, index)
         self.termination = SigmoidTermination(rng, nfeatures, args)
         self.Qval = Q_U(nfeatures, nactions, args, self.weights, policy_over_options, False)
         self.PQval = Q_U(nfeatures, nactions, args, self.weightsP, policy_over_options, True)
@@ -71,14 +70,15 @@ class Option:
 
 #=======Final Policy=======
 class FinalPolicy:
-    def __init__(self, rng, nfeatures, nactions, args, R, qWeight, qWeightp, index):
+    def __init__(self, rng, nfeatures, nactions, args, R, qWeightp, index):
         self.rng = rng
         self.nactions = nactions
         self.internalPI = SoftmaxPolicy(rng, nfeatures, nactions, args, qWeightp)
-        #=======predefine attention?========
-        self.attention = SigmoidAttention(nactions, args, R, qWeight, index)
-        # self.attention = PredefinedAttention(index)
-        #===================================
+        if (args.h_learn):
+            self.attention = SigmoidAttention(nactions, args, R, index)
+        else:
+            self.attention = PredefinedAttention(args, R, index)
+        # self.normalize = args.normalize
 
     def pmf(self, phi):
         pi = self.internalPI.pmf(phi)
@@ -91,10 +91,11 @@ class FinalPolicy:
 
     def H_update(self, traject, qVal):
         self.attention.update(traject, self.pmf(traject[0][0]), qVal)
+        # if self.normalize:
+        #     self.attention.normalize()
         # print(self.attention.pmf())
         # self.attention.regulate(o)
-        # self.attention.normalize()
-
+        
     def P_update(self, traject, baseline):
         self.internalPI.update(traject, baseline)
 
@@ -109,7 +110,7 @@ class SoftmaxPolicy:
         self.temp = args.temp
         self.weights = np.zeros((nfeatures, nactions))
         self.qWeight = qWeight
-        self.lr =args.lr_intra
+        self.lr = args.lr_intra
 
     def _value(self, phi, action=None):
         if action is None:
@@ -152,21 +153,20 @@ class Attention:
 
 
 class SigmoidAttention(Attention):
-    def __init__(self, nactions, args, R, qWeight, index):
+    def __init__(self, nactions, args, R, index):
         super().__init__(args, R)
         self.weights = np.random.uniform(low=-1, high=1, size=(nactions,))
-        self.qWeight = qWeight
         self.lr = args.lr_attend
-        self.clipthres = args.clipthres
-        self.stretchthres = args.stretchthres
-        self.stretchstep = args.stretchstep
         self.o1 = ValueObj(args)
         self.o2 = CoSimObj(args, index)
         self.o3 = EntropyObj(args)
         self.o4 = LengthObj(args)
         CoSimObj.add2list(self)
+        self.normalize = args.normalize
 
     def pmf(self):
+        if self.normalize:
+            return np.clip(softmax(self.weights), 0.05, None)
         return expit(self.weights)
 
     def _grad(self):
@@ -179,15 +179,17 @@ class SigmoidAttention(Attention):
     def update(self, traject, finalPmf, qVal):
         hPmf = self.pmf()
         gradList = [self.o1.grad(traject[0][0], traject[2], hPmf, finalPmf, qVal), self.o2.grad(hPmf), self.o3.grad(hPmf), self.o4.grad(hPmf)]
-        # self.weights += self.lr * np.sum(gradList, axis=0) * self._grad()
-        self.weights += self.lr * np.sum(np.clip(gradList,-5,5), axis=0) * self._grad()
-        for i in range(len(self.weights)):
-            if self.weights[i]<-4.5:
-                self.weights[i] = -4.5
+        self.weights += self.lr * np.sum(gradList, axis=0) * self._grad()
+        # self.weights += self.lr * np.sum(np.clip(gradList,-5,5), axis=0) * self._grad()
+        # for i in range(len(self.weights)):
+        #     if self.weights[i]<-4.5:
+        #         self.weights[i] = -4.5
 
-    def normalize(self):
-        normalizer = np.linalg.norm(self.pmf())
-        self.weights /= normalizer
+    # def normalize(self):
+    #     normalizer = np.sum(self.pmf())
+    #     print(normalizer)
+    #     expo = np.exp(-1 * self.weights)
+    #     self.weights += np.log(expo / np.clip(normalizer*(1+expo) - 1, 0.1, None))
 
     # def regulate(self, o):
     #     normalizer = np.linalg.norm(self.pmf())
@@ -195,8 +197,8 @@ class SigmoidAttention(Attention):
     #         o.weight *= self.stretchstep
     #     else:
     #         o.weight /= self.stretchstep
-    #     expo = np.exp(-1 * self.weights)
-    #     self.weights += np.log(expo / (normalizer*(1+expo) - 1))
+        # expo = np.exp(-1 * self.weights)
+        # self.weights += np.log(expo / (normalizer*(1+expo) - 1))
     #     print(np.linalg.norm(self.pmf()))
     #     if normalizer<self.clipthres:
     #         print('clip')
@@ -205,16 +207,16 @@ class SigmoidAttention(Attention):
 
 
 class PredefinedAttention(Attention):
-    def __init__(self, args, index):
+    def __init__(self, args, R, index):
         super().__init__(args, R)
         if (index==0):
-            self.weights = np.array([1, 0.01, 0.01, 1])
+            self.weights = np.array([1, 1, 1, 1])
         if (index==1):
-            self.weights = np.array([0.01, 1, 0.01, 1])
-        if (index==2):
-            self.weights = np.array([0.01, 1, 1, 0.01])
-        if (index==3):
-            self.weights = np.array([1, 0.01, 1, 0.01])
+            self.weights = np.array([1, 1, 1, 1])
+        # if (index==2):
+        #     self.weights = np.array([0.01, 1, 1, 0.01])
+        # if (index==3):
+        #     self.weights = np.array([1, 0.01, 1, 0.01])
 
         # if (index==0):
         #     self.weights = np.array([0.01, 1, 0.01, 1])
@@ -307,7 +309,7 @@ class EntropyObj(Objective):
 
     def grad(self, hPmf):
         gradient = []
-        normalizer = np.linalg.norm(hPmf)
+        normalizer = np.sum(hPmf)
         normh = hPmf/normalizer
         for i in range(len(hPmf)):
             term1 = (1.+np.log(normh[i]))/normalizer
@@ -318,7 +320,7 @@ class EntropyObj(Objective):
         return self.weight * np.array(gradient)
 
     def loss(self, hPmf):
-        normalizer = np.linalg.norm(hPmf)
+        normalizer = np.sum(hPmf)
         normh = hPmf/normalizer
         return -1*np.sum(normh * np.log(normh))
 
@@ -330,8 +332,10 @@ class LengthObj(Objective):
 
     def grad(self, hPmf):
         # return 0.
-        return -1 * self.weight * np.power(hPmf / self.loss(hPmf), self.p-1) * (self.loss(hPmf)-1.2)
+        # return -1 * self.weight * np.power(hPmf / self.loss(hPmf), self.p-1) * (self.loss(hPmf)-1.2)
+        return -1 * np.power(hPmf / self.loss(hPmf), self.p-1)
     
+
     def loss(self, hPmf):
         return pow(np.sum(np.power(hPmf, self.p)), 1./self.p)
 
@@ -389,7 +393,7 @@ class POO:
     def __init__(self, rng, nfeatures, args):
         self.weights = np.zeros((nfeatures, args.noptions))
         self.weightsP = np.zeros((nfeatures, args.noptions))
-        self.policy = EgreedyPolicy(rng, nfeatures, args, self.weights)
+        self.policy = EgreedyPolicy(rng, args, self.weights)
         self.Q_Omega = Q_O(args, self.weights, False)
         self.Q_OmegaP = Q_O(args, self.weightsP, True)
 
@@ -418,7 +422,7 @@ class POO:
             return np.sum(self.weights[phi, option], axis=0)
 
 class EgreedyPolicy:
-    def __init__(self, rng, nfeatures, args, weights):
+    def __init__(self, rng, args, weights):
         self.rng = rng
         self.epsilon = args.epsilon
         self.noptions = args.noptions

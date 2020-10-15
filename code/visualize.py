@@ -8,8 +8,8 @@ from time import sleep
 # 2 - Blue
 # 3 - Black
 class Visualization:
-    def __init__(self, fRoom, args, colorList=[[255,0,0],[0,255,0],[0,0,255],[0,0,0]]):
-        assert args.noptions == len(colorList), "Length of color list must match number of options"
+    def __init__(self, fRoom, args, nactions, colorList=[[255,0,0],[0,255,0],[0,0,255],[0,0,0]]):
+        assert args.noptions <= len(colorList), "Length of color list must match number of options"
         self.colorList = colorList
         self.layout = fRoom.layout
         self.occupancy = fRoom.occupancy
@@ -17,11 +17,11 @@ class Visualization:
         self.tocell = fRoom.tocell
         self.screen = np.array([list(map(lambda c: [0,0,0] if c=='w' else [255,255,255], line)) for line in self.layout.splitlines()])
         self.lastphi = None
+        self.noptions = args.noptions
+        self.nactions = nactions
 
     def showMap(self, phi, option):
-        for i in range(len(self.colorList)):
-            if option == i:
-                color = self.colorList[i]
+        color = self.colorList[option]
         self._draw(self.lastphi, [255,255,255])
         self._draw(phi, color)
         self.lastphi = phi
@@ -32,9 +32,9 @@ class Visualization:
         sleep(0.05)
 
     def showAttention(self, options):
-        x = np.array([i for i in range(len(self.colorList))])
-        plt.plot(x, np.array([0,0,1,1]), color=[1,1,1])
-        for i in range(len(self.colorList)):
+        x = np.array([i for i in range(self.nactions)])
+        plt.plot(x, np.array([int(i != 0) for i in range(self.nactions)]), color=[1,1,1])
+        for i in range(self.noptions):
             plt.plot(x, options[i].policy.attention.pmf(), color=np.array(self.colorList[i])/255.)
         plt.show()
 
