@@ -258,7 +258,7 @@
 	
 	\quad For the third objective, I will minimize entropy in the attention mechanism. Entropy measures the uncertainty in a probability distribution, so $h$ must be normalized first. This actually also slightly optimize the forth objective since only attending to 1 actions have the lowest uncertainty.$$O_3 = \max_h <\frac{h}{||h||},\log \frac{h}{||h||}> \textnormal{ where log is elementwise}$$
 	
-	\quad For the forth objective, I will minimize the Minkowski distance of the attention mechanism. This is similar to minimizing the length of the attention mechanism, which discourage focusing on too many actions. Having $p<1$ is for making small values more prominent, which slightly optimize the third objective.$$O_4 = \min_h ||h|| \textnormal{ where }||.||\textnormal{ is Minkowski distance with } p<1$$
+	\quad For the forth objective, I will minimize the Minkowski distance of the attention mechanism. This is similar to minimizing the length of the attention mechanism, which discourage focusing on too many actions. Having $p<1$ is for making small values more prominent, which slightly optimize the third objective.$$O_4 = \min_h ||h|| \textnormal{ where }||\times||\textnormal{ is Minkowski distance with } p<1$$
 	
 	\subsection*{4. Selection}
 	\qquad \ Any policy-over-options that favor higher Q-value options will work in this case, because the option will need the right set of actions in order to perform well, or else it will fail horribly. So the Q-value already encoded which option has the right set of actions. This means that policies like $\epsilon$-Greedy should work for this algorithm.
@@ -309,8 +309,10 @@
 	\section{Bibliography}
 	\bibliographystyle{ieeetr}
 	\bibliography{bibliography}
+		
 	\section{Appendix}
-	\subsection*{Notations}
+	\appendix
+	\section{Notations}
 	{\bfseries Markov Decision Process}\\
 	$\mathcal{S}$ --- Set of states\\
 	$\mathcal{A}$ --- Set of actions\\
@@ -363,8 +365,53 @@
 	$\leftarrow$ --- Assignment\\
 	$<,>$ --- Dot product\\
 	$||.||$ --- Norm of a vector unless specify\\
-	\subsection*{Proof}
-	\subsection*{Experimental Details}
-	\subsection*{Code}
+	\section{Proof}
+	\subsection{Derivative of Objective 1}
+	Let $h_\omega^a$ be the element in the attention vector $h_\omega$ that corresponds to the action $a$, i.e. $h_\omega = [h_\omega^{a_0}, h_\omega^{a_1}, ...]$
+	$$\frac{\partial Q_\Omega(s,\omega)}{\partial h_\omega^a} = \sum_{s,\omega} \mu_\Omega(s,\omega|s_0, \omega_0)\sum_a \frac{\partial \pi_{h_\omega} (a|s)}{\partial h_\omega^a} Q_U(s,\omega,a)$$
+	$$= E_{s,\omega,a \sim \pi_{h_\omega}}[\frac{\partial \log \pi_{h_\omega}(a|s)}{\partial h_\omega^a}Q_U(s,\omega,a)]$$
+	The steps above follows directly from the Option-Critic appendix. The next step is to express $\frac{\partial \log \pi_{h_\omega} (a|s)}{\partial h_\omega^a}$ in a simpler form.
+	$$\frac{\partial \log \pi_{h_\omega} (a|s)}{\partial h_\omega^a} = \frac{\partial}{\partial h_\omega^a} [\log\frac{\pi_\omega(a|s)h_\omega^a}{\sum_{a'} \pi_\omega(a'|s)h_\omega^{a'}}]$$
+	$$=\frac{\partial}{\partial h_\omega^a} [\log\pi_\omega(a|s) + \log h_\omega^a - \log\sum_{a'}\pi_\omega(a'|s)h_\omega^{a'}]$$
+	$$=\frac{\partial}{\partial h_\omega^a} [\log\pi_\omega(a|s)] + \frac{\partial}{\partial h_\omega^a}[\log h_\omega^a] - \frac{\partial}{\partial h_\omega^a}[\log\sum_{a'}\pi_\omega(a'|s)h_\omega^{a'}]$$
+	$\pi_\omega(a|s)$ is independent of $h_\omega^a$, hence $\frac{\partial}{\partial h_\omega^a} [\log\pi_\omega(a|s)]=0$
+	$$= \frac{\partial}{\partial h_\omega^a}[\log h_\omega^a] - \frac{\partial}{\partial h_\omega^a}[\log\sum_{a'}\pi_\omega(a'|s)h_\omega^{a'}]$$
+	$$= \frac{1}{h_\omega^a} - \frac{\pi_\omega(a|s)}{\sum_{a'}\pi_\omega(a'|s)h_\omega^{a'}}$$
+	$$= \frac{1}{h_\omega^a} - \frac{\pi_\omega(a|s)}{\sum_{a'}\pi_\omega(a'|s)h_\omega^{a'}} \times \frac{h_\omega^a}{h_\omega^a}$$
+	By definition $\pi_{h_\omega}(a|s)=\frac{\pi_\omega(a|s)h_\omega^a}{\sum_{a'} \pi_\omega(a'|s)h_\omega^{a'}}$
+	$$= \frac{1}{h_\omega^a} - \frac{\pi_{h_\omega}(a|s)}{h_\omega^a}$$
+	$$= \frac{1-\pi_{h_\omega}(a|s)}{h_\omega^a}$$
+	Substitute back to the original calculation,
+	$$\frac{\partial Q_\Omega(s,\omega)}{\partial h_\omega^a} = E_{s,\omega,a \sim \pi_{h_\omega}}[\frac{1-\pi_{h_\omega}(a|s)}{h_\omega^a}Q_U(s,\omega,a)]$$
+	\subsection{Derivative of Objective 2}
+	Let $h_\omega^a$ be the element in the attention vector $h_\omega$ that corresponds to the action $a$, i.e. $h_\omega = [h_\omega^{a_0}, h_\omega^{a_1}, ...]$
+	Since we would like to minimize the cosine similarity, the negative cosine similarity will be used instead.
+	$$\sum_{h_{\omega '} \neq h_\omega} \frac{\partial}{\partial h_\omega^a} \frac{<h_\omega, h_{\omega '}>}{||h_\omega||\times||h_{\omega '}||} = \sum_{h_{\omega '} \neq h_\omega} \frac{||h_\omega||\times||h_{\omega '}|| \frac{\partial}{\partial h_\omega^a} <h_\omega, h_{\omega '}> - <h_\omega, h_{\omega '}> \frac{\partial}{\partial h_\omega^a} ||h_\omega||\times||h_{\omega '}||}{(||h_\omega||\times||h_{\omega '}||)^2}$$
+	I will calculate each of the derivative separately:
+	$$\frac{\partial}{\partial h_\omega^a} <h_\omega, h_{\omega '}> = \frac{\partial}{\partial h_\omega^a} \sum_{a'}h_\omega^{a'} h_{\omega '}^{a'} = h_{\omega '}^a$$
+	$$\frac{\partial}{\partial h_\omega^a} ||h_\omega||\times||h_{\omega '}|| = ||h_{\omega '}|| \frac{\partial}{\partial h_\omega^a} \sqrt{\sum_{a'}(h_\omega^{a'})^2} = ||h_{\omega '}|| \frac{h_\omega^a}{\sqrt{\sum_{a'}(h_\omega^{a'})^2}}$$
+	Substitute back to the original calculation,
+	$$\sum_{h_{\omega '} \neq h_\omega} \frac{\partial}{\partial h_\omega^a} \frac{<h_\omega, h_{\omega '}>}{||h_\omega||\times||h_{\omega '}||} = \sum_{h_{\omega '} \neq h_\omega} \frac{||h_\omega||\times||h_{\omega '}|| h_{\omega '}^a - <h_\omega, h_{\omega '}> ||h_{\omega '}|| \frac{h_\omega^a}{\sqrt{\sum_{a'}(h_\omega^{a'})^2}}}{(||h_\omega||\times||h_{\omega '}||)^2}$$
+	$$= \sum_{h_{\omega '} \neq h_\omega} \frac{h_{\omega '}^a}{||h_\omega||\times||h_{\omega '}||} - \frac{<h_\omega, h_{\omega '}> h_\omega^a}{(||h_\omega||\times||h_{\omega '}||)\times||h_{\omega}||^2}$$
+	\subsection{Derivative of Objective 3}
+	Let $h_\omega^a$ be the element in the attention vector $h_\omega$ that corresponds to the action $a$, i.e. $h_\omega = [h_\omega^{a_0}, h_\omega^{a_1}, ...]$
+	Since entropy usually applies to probabilities, I will normalize the attention unit into $\overline{h_\omega} = \frac{h_\omega}{\sum_{a'} h_\omega^{a'}}$
+	$$\frac{\partial H(\overline{h_\omega})}{\partial h_\omega^a} = \frac{\partial \sum_{a'} \overline{h_\omega^{a'}}\log \overline{h_\omega^{a'}}}{\partial h_\omega^a}$$
+	$$= \frac{\partial \overline{h_\omega^a} \log \overline{h_\omega^a}}{\partial h_\omega^a} + \sum_{\overline{h_\omega^{a'}} \neq \overline{h_\omega^{a}}} \frac{\partial \overline{h_\omega^{a'}} \log \overline{h_\omega^{a'}}}{\partial h_\omega^{a'}}$$
+	$$= \frac{\partial \overline{h_\omega^a} \log \overline{h_\omega^a}}{\partial \overline{h_\omega^{a}}} \times \frac{\partial \overline{h_\omega^a}}{h_\omega^a} + \sum_{\overline{h_\omega^{a'}} \neq \overline{h_\omega^{a}}} \frac{\partial \overline{h_\omega^{a'}} \log \overline{h_\omega^{a'}}}{\partial \overline{h_\omega^{a'}}} \times \frac{\partial \overline{h_\omega^{a'}}}{h_\omega^{a'}}$$
+	I will calculate each of the derivative separately:
+	$$\frac{\partial \overline{h_\omega^a} \log \overline{h_\omega^a}}{\partial \overline{h_\omega^{a}}} = \log \overline{h_\omega^a}\frac{\partial \overline{h_\omega^a}}{\partial \overline{h_\omega^{a}}} + \overline{h_\omega^a}\frac{\partial \log \overline{h_\omega^a}}{\partial \overline{h_\omega^{a}}} = \log \overline{h_\omega^a} + 1$$
+	$$\frac{\partial \overline{h_{\omega}^a}}{\partial h_\omega^a} = \frac{\partial}{\partial h_\omega^a} \frac{h_\omega^a}{\sum_b h_\omega^b} = \frac{\sum_b h_\omega^b - h_\omega^a}{(\sum_{b} h_\omega^b)^2}$$
+	$$\frac{\partial \overline{h_{\omega}^{a'}}}{\partial h_\omega^a} = \frac{\partial}{\partial h_\omega^a} \frac{h_\omega^{a'}}{\sum_b h_\omega^b} = \frac{- h_\omega^{a'}}{(\sum_b h_\omega^b)^2}$$
+	Substitute back to the original calculation,
+	$$\frac{\partial \overline{h_\omega^a} \log \overline{h_\omega^a}}{\partial \overline{h_\omega^{a}}} = (\log \overline{h_\omega^a} + 1)\frac{\sum_b h_\omega^b - h_\omega^a}{(\sum_{b} h_\omega^b)^2} + \sum_{\overline{h_\omega^{a'}} \neq \overline{h_\omega^{a}}} (\log \overline{h_\omega^{a'}} + 1)\frac{- h_\omega^{a'}}{(\sum_b h_\omega^b)^2}$$
+	$$=\frac{(\log \overline{h_\omega^a} + 1)}{\sum_b h_\omega^b} + \sum_{h_\omega^{a'}} (\log \overline{h_\omega^{a'}} + 1)\frac{- h_\omega^{a'}}{(\sum_b h_\omega^b)^2}$$
+	\subsection{Derivative of Objective 4}
+	Let $h_\omega^a$ be the element in the attention vector $h_\omega$ that corresponds to the action $a$, i.e. $h_\omega = [h_\omega^{a_0}, h_\omega^{a_1}, ...]$
+	Since we would like to minimize the length, the negative length will be used instead.
+	$$\frac{\partial ||h_\omega||}{\partial h_\omega^a} = \frac{\partial}{\partial h_\omega^a} \sqrt{\sum_{a'} (h_\omega^{a'})^2}$$
+	$$= \frac{h_\omega^a}{\sqrt{\sum_{a'} (h_\omega^{a'})^2}} = \frac{h_\omega^a}{||h_\omega||}$$
+	\section{Experimental Details}
+	\section{Code}
 
 \end{document}
