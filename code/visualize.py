@@ -65,9 +65,9 @@ class Visualization:
         plt.subplot(111)
         plt.imshow(pref, vmax=255, vmin=0)
         if wo != None:
-            plt.savefig("../result/{0}/wo_{1}/dc_{2}/run_{3}.png".format(algo, str(wo), str(dc), str(run)))
+            plt.savefig("../result2/{0}/wo_{1}/dc_{2}/run_{3}.png".format(algo, str(wo), str(dc), str(run)))
         else:
-            plt.savefig("../result/{0}/dc_{1}/run_{2}.png".format(algo, str(dc), str(run)))
+            plt.savefig("../result2/{0}/dc_{1}/run_{2}.png".format(algo, str(dc), str(run)))
 
     def resetMap(self, phi):
         self.screen = np.array([list(map(lambda c: [0,0,0] if c=='w' else [255,255,255], line)) for line in self.layout.splitlines()])
