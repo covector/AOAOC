@@ -105,7 +105,7 @@
 	
 	\quad In Reinforcement Learning, we have a way to capture this idea of grouping action by using options \cite{SUTTON1999181}. When the options are defined, learning how to use them are very simple. However, if the options are not given and need to be learned, things get a lot harder since it requires knowing what makes an option good. 
 
-	\quad Many people argue that a good options should be diverse and localized \cite{khetarpal2020options}. One of the recent papers \cite{attentionoptioncritic} follows this argument by requiring options to attend to different features of the state. This essay focus on extending this idea of abstraction from state to action. 
+	\quad Many people argue that a good options should be diverse and localized, and many recent algorithms have followed this argument. Indeed, these algorithms have been able to discover options that are localized, so in this essay, I will try to derive a framework for localization in order to answer my research question, and I will develop an algorithm out of the framework to see whether it can actually train localized options. 
 	
 	\quad This essay will be structured as follows: First, preliminary and related work will be presented to give a context to what I am trying to do. Second, previous work will be analyzed to figure out how localization is achieved. Third, a framework will be proposed based on the observations made in the analysis. Forth, an algorithm will be derived from the framework. Finally, the algorithm will be tested in the Four Rooms environment.
 	\section{Preliminary}
@@ -140,6 +140,17 @@
 	\quad These options take turns to choose the action. A policy-over-options $\pi_\Omega : \mathcal{S} \times \Omega \rightarrow [0,1]$, where $\Omega$ is the set of options, decides which option to use. When an option is chosen, actions are chosen by its internal policy $\pi_\omega$ from then on, until it terminated according to its $\beta_\omega$, then the policy-over-options $\pi_\Omega$ chooses an option again. An option has a chance to terminate every time environment transitions to a new state.
 	
 	\quad If the options are defined, the policy-over-options $\pi_\Omega$ can be learned by using SMDP Q-Learning \cite{smdp} or Intra-Option Learning \cite{intraoplearn}. However, options are not always predefined and need to be discovered.
+	\subsection*{Four Rooms Environment}
+	\qquad \ The Four Rooms environment is commonly used to evaluate algorithms that use options. The agent have 4 actions: up, down, left and right, which will move the agent in that corresponding direction. The choice of agent has $1/3$ chance to fail and a random action will be chosen instead.
+	
+	\quad +50 reward will be given to the agent when it arrives to the goal state, and the episode will terminate after that.
+	
+	\quad Each cell position in the environment is mapped to a state number and is given to the agent in each step. The agent starts in a random state when an episode starts.
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=1.2in]{4Rooms.png}
+		\caption{The Four Room environment. The black cells indicate the wall. The white cells indicate the area the agents can be in. The blue cell indicates the current position of the agent. The green cell indicates the goal.}
+	\end{figure}
 	\section{Related Work}
 	\qquad \ In this section, some option discovery algorithms will be summarized.
 	\subsection*{Option-Critic}
@@ -226,7 +237,7 @@
 	{\bfseries{4. Selection}}
 	
 	\normalsize{Form the policy-over-options to select option in different state}\\
-	\rule{420pt}{1pt}\vspace{0.1in}
+	\rule{420pt}{2pt}\vspace{0.1in}
 	
 	\quad This framework is inspired by Adaboost \cite{adaboost}, which is an Ensemble Learning algorithm from Supervised Learning. There are a lot of similarities between Ensemble Learning and Option Learning, this has already been pointed out in previous work \cite{zhang2018ace}, the individual weak classifiers can be thought of as options.
 	
@@ -261,7 +272,7 @@
 	\qquad \ Now that there is a framework, I can just follow the framework and derive a new algorithm. The following algorithm will be called Attention-Over-Actions Option-Critic because it perform abstraction on the action space, this algorithm is largely inspired by Attention Option-Critic.
 	\begin{figure}[h]
 		\centering
-		\includegraphics[width=4in]{aoaoc.png}
+		\includegraphics[width=3.8in]{aoaoc.png}
 		\caption{Visualization of the interaction between the environment and the Attention-Over-Actions Option-Critic algorithm.}
 	\end{figure}
 	\subsection*{1. Grouping}
@@ -336,16 +347,74 @@
 		\Until $s'$ is terminal	
 	\end{algorithmic}
 	\end{algorithm}
-	\section{Evaluation}
-	\qquad \ In this section
+	\section{Experiment}
+	\qquad \ In this section the algorithm AOAOC will be tested in the Four Rooms environment.
+	\subsection*{Initial Setup of the Experiment}
+	\qquad \ $Q_\Omega$ and $Q_U$ each is represented as a tensor. I do not need to use a neural network here since the state space is discrete in Four Rooms.
+	
+	\quad $\pi_\Omega$ is an $\epsilon$-greedy policy for the $Q_\Omega$, i.e. the policy-over-options has a probability of $1-\epsilon+\frac{\epsilon}{n_\Omega}$ to select the best option, where $n_\Omega$ is the number of options.
+	
+	\quad $\nu$ is a tensor, and $\beta_{\omega, \nu}$ is parameterized by $\nu$. More precisely, $\beta_{\omega, \nu} = \sigma(\nu)$, where $\sigma$ is the sigmoid function $\frac{1}{1+e^{-x}}$. This can ensure that $\beta_{\omega, \nu}$ is a probability.
+	
+	\quad $\theta$ is also a tensor, and $\pi_{\omega, \theta}$ is parameterized by $\theta$. More precisely, $\pi_{\omega, \theta}$ is the softmax over the components of different actions in $\theta$. This can ensure that $\pi_{\omega, \theta}$ is a probability distribution over actions.
+	
+	\quad $\phi$ is also a tensor, and $h_{\omega, \phi}$ is parameterized by $\phi$. Just like as $\beta_{\omega, \nu}$, $h_{\omega, \phi} = \sigma(\phi)$. This can ensure that $h_{\omega, \phi}$ is between 0 and 1.
+
+	\quad Also, I would like the agent to have a larger incentive to go to the goal in a shorter duration, so I added a punishment of -2 for each step taken by the agent.
+	\subsection*{Problematic Attention Mechanism}
+	\qquad \ When running the experiment, two problem is encountered:
+	
+	\qquad 1. The attention mechanism $h_\omega$ often becomes all one. 
+	
+	\qquad 2. The attention objectives conflict with one another.
+	
+	\quad Problem 1 leads to degenerate attention mechanism because the option is paying the same amount of attention to all actions. Suppose each of the component in the attention mechanism is a constant $k$, i.e. $h_\omega = [k, k, k, ...]$. The final policy will be:
+	$$\pi_{h_\omega}(a|s) = \frac{k \times \pi_\omega(a|s)}{\sum_{a'} k \times \pi_\omega(a'|s)} = \frac{\pi_\omega(a|s)}{\sum_{a'}\pi_\omega(a'|s)}$$
+	which is the same as not using attention at all.
+	
+	\quad This problem is probably caused by the objective 1, which is to maximizing $Q_\Omega(s,\omega)$. Having a uniform attention always yield a higher return because there will not be a constraint to which action it can use.
+	\begin{figure}[h]
+		\centering
+		\small{(a)}
+		\includegraphics[width=2in]{attentionViz.png}
+		\hspace{0.2in}
+		\small{(b)}
+		\includegraphics[width=2in]{all1s.png}
+		\hspace{0.2in}
+		\caption{x-axis is the actions. y-axis is the attention on that action. Red and green lines each represents an attention mechanism. (a) is what the attention mechanism should look like. (b) is when it becomes all ones.}
+	\end{figure}
+
+	\quad Problem 2 is follows directly from problem 1. Objective 1 will try to increase all the components to 1. Objective 3 will try to make only one of the components to 1, while the others all 0. Objective 4 will try to decrease all the components to 0.
+	
+	\quad My original intention is that the algorithm will automatically balance each objective and find the optimal attention mechanism. However, it turns out that the attention mechanism almost always result in 1 of 3 situations:
+	
+	\qquad 1. All components are 1
+	
+	\qquad 2. All components are 0
+	
+	\qquad 3. Only 1 of the component is one, while the others are all zero
+	
+	\quad For most of the time, 1 of the objectives completely dominates and results in 1 of the 3 situations above.
+	\begin{figure}[h]
+		\centering
+		\small{(a)}
+		\includegraphics[width=1.5in]{all1s.png}
+		\hspace{0.2in}
+		\small{(b)}
+		\includegraphics[width=1.5in]{entropyMin.png}
+		\hspace{0.2in}
+		\small{(c)}
+		\includegraphics[width=1.5in]{all0s.png}
+		\caption{(a), (b) and (c) is the perfect end result for objective 1,3 and 4 respectively. All of which are degenerated attention mechanism.}
+	\end{figure}
 	\section{Conclusion}
 	\section{Future Direction}
 	\qquad \ This algorithm currently only focuses on discrete action space, a possible future direction might be extending this to continuous space. For vector actions, it might be good to attend to only some of the components of the vector, while ignoring other components by either randomly selecting values for them or keeping them the same as in the last state of the previous option. For scalar action, one direction is to use a one dimensional gaussian distribution as the attention mechanism, and multiply it with the original action distribution. However, some sort of trick may need to be deployed to speed up the process of normalization.
-	\section{Bibliography}
+	\section*{Bibliography}
 	\bibliographystyle{ieeetr}
 	\bibliography{bibliography}
 		
-	\section{Appendix}
+	\section*{Appendix}
 	\appendix
 	\section{Notations}
 	{\bfseries Markov Decision Process}\\

@@ -1,16 +1,29 @@
-'''
-This code is taken directly from the ioc repository, with little modification.
-'''
 import numpy as np
 from random import uniform
 
 class Fourrooms:
-    def __init__(self, initstate_seed, punishEachStep, deterministic, modified):
+    def __init__(self, initstate_seed, punishEachStep, deterministic, modified, easier):
         self.punishEachStep = punishEachStep
         self.deterministic = deterministic
         self.modified = modified
-
-        self.layout = """\
+        if easier:
+            self.layout = """\
+wwwwwwwwwwwww
+w           w
+w     w     w
+w     w     w
+w     w     w
+w     w     w
+w wwwww     w
+w     wwwww w
+w     w     w
+w     w     w
+w     w     w
+w           w
+wwwwwwwwwwwww
+"""
+        else:
+            self.layout = """\
 wwwwwwwwwwwww
 w     w     w
 w     w     w
@@ -25,6 +38,7 @@ w           w
 w     w     w
 wwwwwwwwwwwww
 """
+
 
         self.occupancy = np.array([list(map(lambda c: 1 if c=='w' else 0, line)) for line in self.layout.splitlines()])
 
@@ -73,7 +87,7 @@ wwwwwwwwwwwww
 
     def reset(self, test=None):
         if test:
-            state=test
+            state = test
         else:
             state = self.rng_init_state.choice(self.init_states)
         self.currentcell = self.tocell[state]

@@ -1,6 +1,3 @@
-'''
-This code is based on the ioc repository [13]
-'''
 import numpy as np
 from fourrooms import Fourrooms
 from scipy.special import logsumexp, expit, softmax
@@ -143,6 +140,11 @@ class LearnableAttention():
         hPmf = self.pmf()
         gradList = [self.o1.grad(traject[0][0], traject[2], hPmf, finalPmf, qVal), self.o2.grad(hPmf), self.o3.grad(hPmf), self.o4.grad(hPmf)]
         self.weights += self.lr * np.sum(gradList, axis=0) * self._grad()
+        if self.normalize:
+            self.normalizing()
+
+    def normalizing(self):
+        self.weights -= np.mean(self.weights)
 
 
 class PredefinedAttention():
