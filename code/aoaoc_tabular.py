@@ -180,7 +180,7 @@ class ValueObj(Objective):
     def __init__(self, args):
         super().__init__(args.wo1)
 
-    def grad(self, phi, a, hPmf, finalPmf, qVal):
+    def grad(self, phi, a, hPmf, finalPmf, qVal):   # proof is in appedix B.1
         return self.weight * ((finalPmf + 1)/hPmf[a]) * qVal
 
     def loss(self):
@@ -194,7 +194,7 @@ class CoSimObj(Objective):
         super().__init__(args.wo2)
         self.index = index
 
-    def grad(self, hPmf):
+    def grad(self, hPmf):   # proof is in appedix B.2
         gradient = []
         for i in range(len(hPmf)):
             derivative = 0.
@@ -227,7 +227,7 @@ class EntropyObj(Objective):
     def __init__(self, args):
         super().__init__(args.wo3)
 
-    def grad(self, hPmf):
+    def grad(self, hPmf):   # proof is in appedix B.3
         gradient = []
         normalizer = np.sum(hPmf)
         normh = hPmf/normalizer
@@ -247,7 +247,7 @@ class LengthObj(Objective):
     def __init__(self, args):
         super().__init__(args.wo4)
 
-    def grad(self, hPmf):
+    def grad(self, hPmf):   # proof is in appedix B.4
         return -1 * hPmf / self.loss(hPmf)
     
 

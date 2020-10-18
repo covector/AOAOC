@@ -92,7 +92,7 @@
 		\vspace{0.1in}
 		\large{\rule{420pt}{0.4pt}}
 		
-		\large{Computer Science Extended Essay}
+		\large{IB Computer Science Extended Essay}
 		
 		\normalsize{Word Count:}
 	\end{center}
@@ -276,7 +276,7 @@
 		\caption{Visualization of the interaction between the environment and the Attention-Over-Actions Option-Critic algorithm.}
 	\end{figure}
 	\subsection*{1. Grouping}
-	\qquad \ In Attention Option-Critic, the Grouping step divide sub-tasks based on features needed, this works because each sub-task requires a different subset of features. The following algorithm borrow the idea of attention over state features and apply it to actions, so each option will attend to a different sets of actions. 
+	\qquad \ In Attention Option-Critic, the Grouping step identify sub-tasks based on features needed, this works because each sub-task requires a different subset of features. The following algorithm borrow the idea of attention over state features and apply it to actions, so each option will attend to a different sets of actions. 
 	
 	\quad The intuition for this is that each sub-task will not need to use all the actions, for example, you would not consider performing a kicking action when you are driving a car. This is essentially performing actions abstraction, since the option can only attend to a subset of the actions.
 	\subsection*{2. Assignment}
@@ -394,7 +394,7 @@
 	
 	\qquad 3. Only 1 of the component is one, while the others are all zero
 	
-	\quad For most of the time, 1 of the objectives completely dominates and results in 1 of the 3 situations above.
+	\quad For most of the time, 1 of the objectives completely dominates and results in 1 of the 3 situations above. In order to resolve this problem, I can try controlling the number of actions that an option can attend to. However, this will lead to the attention being designed by me instead of being learned by the algorithm, since I have too much control over the training process. Moreover, the desire number of actions for each options are not clear anyway. 
 	\begin{figure}[h]
 		\centering
 		\small{(a)}
@@ -407,9 +407,67 @@
 		\includegraphics[width=1.5in]{all0s.png}
 		\caption{(a), (b) and (c) is the perfect end result for objective 1,3 and 4 respectively. All of which are degenerated attention mechanism.}
 	\end{figure}
+
+	\quad In order to solve both of these problems, I decided to limit the attention mechanism to be a probability distribution. Instead of using a sigmoid function, I will use a softmax function for the attention mechanism.
+	
+	\quad This has a lot of benefit, for instance, the objective 4 can be eliminated because a probability distribution need to add up to 1 anyway. Also, the situation where all the components of the attention mechanism becomes 0 or 1 will not happened. This change also makes intuitive sense, since as you pay more attention to one thing, you pay less attention to others.
+	\subsection*{Adding Deliberation Cost}
+	\qquad \ One way of qualitatively evaluating the algorithm's ability to create localized options is to look at the $Q_\Omega$ in each state. If the options are localized, the state space will be clearly divided into regions. However, this is not the case.
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=1.5in]{noDC.png}
+		\caption{The option that will be chosen in each state. Red and green cell each corresponds to 1 of the options. In this figure, the options are not localized.}
+	\end{figure}
+
+	\quad This is not completely unreasonable, because the algorithm has no reason to group actions that are being used successively together. So I decided to add deliberation cost to the algorithm. I will now provide a simple scenario to illustrate why I added deliberation cost.
+	\begin{figure}[h]
+	\centering
+	\small{(a)}
+	\includegraphics[width=4in]{actionSeq.png}\\
+	\small{(b)}
+	\includegraphics[width=4in]{actionSeqB.png}\\
+	\small{(c)}
+	\includegraphics[width=4in]{actionSeqG.png}
+	\caption{(a) is the hypothetical sub-task. Red and green each corresponds to 1 of the options. (b) and (c) corresponds to not using and using deliberation cost respectively. In (b), the red option attends to $a_1,a_3$, the green option attends to $a_2,a_4$. In (c), the red option attends to $a_1,a_2$, the green option attends to $a_3,a_4$.}
+	\end{figure}
+	
+	\quad Suppose $a_1, a_2, a_3, a_4$ are actions, and there is a sub-task where first you have to perform $a_1$ and $a_2$ in an alternating fashion, then after a while, you have to perform $a_3$ and $a_4$ also in an alternating fashion.
+	
+	\quad Without deliberation cost, the algorithm has no reason not to make one option attend to $a_1$ and $a_3$, another option attend to $a_2$ and $a_4$. However, with deliberation cost, the algorithm will make one option attend to $a_1$ and $a_2$, another option attend to $a_3$ and $a_4$, because this will decrease the deliberation cost.
+
+	\quad Note that the deliberation cost used here uses $\tau = 0$.
+	
+	\quad Adding deliberation cost can also be interpreted as adding an extra constraint to the original deliberation cost algorithm, so that apart from having long options, options should also use a small set of actions.
+	\subsection*{Comparison with Deliberation Cost}
+	\qquad \ Indeed it is able to divide the state space into regions. However, when comparing this with the original deliberation cost algorithm, it is not clear what benefit has the attention mechanism brought. 
+	\begin{figure}[h]
+		\centering
+		\large{(a)}
+		\includegraphics[width=1.5in]{cherryPicked.png}
+		\hspace{0.2in}
+		\large{(b)}
+		\includegraphics[width=1.5in]{nonPicked.png}
+		\caption{Localization only occurs sometimes. (a) is a cherry-picked result that localization has been achieved. (b) is what the result looks with the same hyperparameters.}
+	\end{figure}
+
+	\quad AOAOC with deliberation cost and Deliberation Cost alone seem to produce pretty similar results. This means that probably the localization is only achieved because of the deliberation cost.
+	
+	\quad Even though there seems to be no benefit in using attention mechanism from the above results, in theory, localized options produced by AOAOC should be more meaningful than that produced by deliberation cost. Deliberation cost group states that are close together into a sub-task, while AOAOC should group actions that are used consecutively into a sub-task.
+	
+	\quad This is why I changed the environment to make it easier. I switched the left and right action in the top-right and bottom-left room. This way navigating each room should only need 2 of the actions, and also the 2 actions needed in a room is completely different from its neighboring rooms.
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=1.5in]{after.png}
+		\caption{The left and right actions in the blue area is switched. So in the white area, only the up and right actions are needed. While in the blue area, only the down and left actions are needed.}
+	\end{figure}
+
+	\quad sort of success but may be overfitting
 	\section{Conclusion}
+	\qquad \ 
 	\section{Future Direction}
-	\qquad \ This algorithm currently only focuses on discrete action space, a possible future direction might be extending this to continuous space. For vector actions, it might be good to attend to only some of the components of the vector, while ignoring other components by either randomly selecting values for them or keeping them the same as in the last state of the previous option. For scalar action, one direction is to use a one dimensional gaussian distribution as the attention mechanism, and multiply it with the original action distribution. However, some sort of trick may need to be deployed to speed up the process of normalization.
+	\qquad \ As mentioned before, this algorithm probably can only work in environment with large discrete action space. Hence, a possible future direction is trying to apply this in an environment which has a large action space.
+	
+	\quad Besides, the idea of this algorithm can also be extended to continuous action space. In continuous action space sometimes the action will be a vector, the options can attend to only some of the components of this action vector.
 	\section*{Bibliography}
 	\bibliographystyle{ieeetr}
 	\bibliography{bibliography}
@@ -507,6 +565,218 @@
 	$$\frac{\partial ||h_\omega||}{\partial h_\omega^a} = \frac{\partial}{\partial h_\omega^a} \sqrt{\sum_{a'} (h_\omega^{a'})^2}$$
 	$$= \frac{h_\omega^a}{\sqrt{\sum_{a'} (h_\omega^{a'})^2}} = \frac{h_\omega^a}{||h_\omega||}$$
 	\section{Experimental Details}
+	\section{Experimental Results}
+	\subsection*{AOAOC in Unmodified Four Rooms}
+	\begin{figure}[H]
+		\centering
+		\begin{tabular}{ccccc}
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_4.png}} \\		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_4.png}} \\
+		\end{tabular}
+		\caption{Deliberation Cost = 1. Learning rate of attention mechanism = 0.01, 0.05, 0.1 and 0.2 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
+	\end{figure}
+	\begin{figure}[H]
+	\centering
+	\begin{tabular}{ccccc}
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_4.png}} \\
+	\end{tabular}
+	\caption{Deliberation Cost = 2. Learning rate of attention mechanism = 0.01, 0.05, 0.1 and 0.2 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
+	\end{figure}
+	\begin{figure}[H]
+	\centering
+	\begin{tabular}{ccccc}
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_3/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_3/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_3/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_3/run_4.png}} \\
+	\end{tabular}
+	\caption{Deliberation Cost = 3. Learning rate of attention mechanism = 0.01, 0.05, 0.1 and 0.2 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
+	\end{figure}
+	\subsection*{AOAOC in Modified Four Rooms}
+	\begin{figure}[H]
+	\centering
+	\begin{tabular}{ccccc}
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_1/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_1/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_1/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_1/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_1/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_1/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_1/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_1/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_1/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_1/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_1/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_1/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_1/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_1/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_1/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_1/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_1/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_1/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_1/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_1/run_4.png}} \\
+	\end{tabular}
+	\caption{Deliberation Cost = 1. Learning rate of attention mechanism = 0.01, 0.05, 0.1 and 0.2 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
+	\end{figure}
+	\begin{figure}[H]
+	\centering
+	\begin{tabular}{ccccc}
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_2/run_4.png}} \\
+	\end{tabular}
+	\caption{Deliberation Cost = 2. Learning rate of attention mechanism = 0.01, 0.05, 0.1 and 0.2 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
+	\end{figure}
+	\begin{figure}[H]
+	\centering
+	\begin{tabular}{ccccc}
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.01/dc_3/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.05/dc_3/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.1/dc_3/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_easy/wo_0.2/dc_3/run_4.png}} \\
+	\end{tabular}
+	\caption{Deliberation Cost = 3. Learning rate of attention mechanism = 0.01, 0.05, 0.1 and 0.2 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
+	\end{figure}
+	\subsection*{Deliberation Cost in Unmodified Four Rooms}
+	\begin{figure}[H]
+		\centering
+		\begin{tabular}{ccccc}
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_0.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_1.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_2.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_3.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_0.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_1.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_2.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_3.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_0.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_1.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_2.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_3.png}} &
+			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_4.png}} \\
+		\end{tabular}
+		\caption{Deliberation Cost = 0.5, 1, 2 and 3 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
+	\end{figure}
+	\subsection*{Deliberation Cost in Modified Four Rooms}
+	\begin{figure}[H]
+	\centering
+	\begin{tabular}{ccccc}
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_4.png}} \\
+	\end{tabular}
+	\caption{Deliberation Cost = 0.5, 1, 2 and 3 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
+	\end{figure}
 	\section{Code}
 	The code below is based on codes in the ioc repository.\cite{iocrepo}
 	\lstset{style=code}
