@@ -1,0 +1,663 @@
+\documentclass[8pt]{article}
+
+    \usepackage[breakable]{tcolorbox}
+    \usepackage{parskip} % Stop auto-indenting (to mimic markdown behaviour)
+    
+    \usepackage{iftex}
+    \ifPDFTeX
+    	\usepackage[T1]{fontenc}
+    	\usepackage{mathpazo}
+    \else
+    	\usepackage{fontspec}
+    \fi
+
+    % Basic figure setup, for now with no caption control since it's done
+    % automatically by Pandoc (which extracts ![](path) syntax from Markdown).
+    \usepackage{graphicx}
+    % Maintain compatibility with old templates. Remove in nbconvert 6.0
+    \let\Oldincludegraphics\includegraphics
+    % Ensure that by default, figures have no caption (until we provide a
+    % proper Figure object with a Caption API and a way to capture that
+    % in the conversion process - todo).
+    \usepackage{caption}
+    \DeclareCaptionFormat{nocaption}{}
+    \captionsetup{format=nocaption,aboveskip=0pt,belowskip=0pt}
+
+    \usepackage[Export]{adjustbox} % Used to constrain images to a maximum size
+    \adjustboxset{max size={0.9\linewidth}{0.9\paperheight}}
+    \usepackage{float}
+    \floatplacement{figure}{H} % forces figures to be placed at the correct location
+    \usepackage{xcolor} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage{textcomp} % defines textquotesingle
+    % Hack from http://tex.stackexchange.com/a/47451/13684:
+    \AtBeginDocument{%
+        \def\PYZsq{\textquotesingle}% Upright quotes in Pygmentized code
+    }
+    \usepackage{upquote} % Upright quotes for verbatim code
+    \usepackage{eurosym} % defines \euro
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics 
+                         % to support a larger range
+    \makeatletter % fix for grffile with XeLaTeX
+    \def\Gread@@xetex#1{%
+      \IfFileExists{"\Gin@base".bb}%
+      {\Gread@eps{\Gin@base.bb}}%
+      {\Gread@@xetex@aux#1}%
+    }
+    \makeatother
+
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    % The default LaTeX title has an obnoxious amount of whitespace. By default,
+    % titling removes some of it. It also provides customization options.
+    \usepackage{titling}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+    \usepackage[inline]{enumitem} % IRkernel/repr support (it uses the enumerate* environment)
+    \usepackage[normalem]{ulem} % ulem is needed to support strikethroughs (\sout)
+                                % normalem makes italics be italics, not underlines
+    \usepackage{mathrsfs}
+    
+
+    
+    % Colors for the hyperref package
+    \definecolor{urlcolor}{rgb}{0,.145,.698}
+    \definecolor{linkcolor}{rgb}{.71,0.21,0.01}
+    \definecolor{citecolor}{rgb}{.12,.54,.11}
+
+    % ANSI colors
+    \definecolor{ansi-black}{HTML}{3E424D}
+    \definecolor{ansi-black-intense}{HTML}{282C36}
+    \definecolor{ansi-red}{HTML}{E75C58}
+    \definecolor{ansi-red-intense}{HTML}{B22B31}
+    \definecolor{ansi-green}{HTML}{00A250}
+    \definecolor{ansi-green-intense}{HTML}{007427}
+    \definecolor{ansi-yellow}{HTML}{DDB62B}
+    \definecolor{ansi-yellow-intense}{HTML}{B27D12}
+    \definecolor{ansi-blue}{HTML}{208FFB}
+    \definecolor{ansi-blue-intense}{HTML}{0065CA}
+    \definecolor{ansi-magenta}{HTML}{D160C4}
+    \definecolor{ansi-magenta-intense}{HTML}{A03196}
+    \definecolor{ansi-cyan}{HTML}{60C6C8}
+    \definecolor{ansi-cyan-intense}{HTML}{258F8F}
+    \definecolor{ansi-white}{HTML}{C5C1B4}
+    \definecolor{ansi-white-intense}{HTML}{A1A6B2}
+    \definecolor{ansi-default-inverse-fg}{HTML}{FFFFFF}
+    \definecolor{ansi-default-inverse-bg}{HTML}{000000}
+
+    % commands and environments needed by pandoc snippets
+    % extracted from the output of `pandoc -s`
+    \providecommand{\tightlist}{%
+      \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},fontsize=\tiny}
+    % Add ',fontsize=\small' for more characters per line
+    \newenvironment{Shaded}{}{}
+    \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{{#1}}}
+    \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{{#1}}}}
+    \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{{#1}}}
+    \newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{{#1}}}
+    \newcommand{\RegionMarkerTok}[1]{{#1}}
+    \newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\NormalTok}[1]{{#1}}
+    
+    % Additional commands for more recent versions of Pandoc
+    \newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{{#1}}}
+    \newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{{#1}}}
+    \newcommand{\ImportTok}[1]{{#1}}
+    \newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{{#1}}}}
+    \newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{{#1}}}
+    \newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{{#1}}}
+    \newcommand{\BuiltInTok}[1]{{#1}}
+    \newcommand{\ExtensionTok}[1]{{#1}}
+    \newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{{#1}}}
+    \newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{{#1}}}
+    \newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    
+    
+    % Define a nice break command that doesn't care if a line doesn't already
+    % exist.
+    \def\br{\hspace*{\fill} \\* }
+    % Math Jax compatibility definitions
+    \def\gt{>}
+    \def\lt{<}
+    \let\Oldtex\TeX
+    \let\Oldlatex\LaTeX
+    \renewcommand{\TeX}{\textrm{\Oldtex}}
+    \renewcommand{\LaTeX}{\textrm{\Oldlatex}}
+    % Document parameters
+    % Document title
+    \title{Experiment}
+    
+    
+    
+    
+    
+% Pygments definitions
+\makeatletter
+\def\PY@reset{\let\PY@it=\relax \let\PY@bf=\relax%
+    \let\PY@ul=\relax \let\PY@tc=\relax%
+    \let\PY@bc=\relax \let\PY@ff=\relax}
+\def\PY@tok#1{\csname PY@tok@#1\endcsname}
+\def\PY@toks#1+{\ifx\relax#1\empty\else%
+    \PY@tok{#1}\expandafter\PY@toks\fi}
+\def\PY@do#1{\PY@bc{\PY@tc{\PY@ul{%
+    \PY@it{\PY@bf{\PY@ff{#1}}}}}}}
+\def\PY#1#2{\PY@reset\PY@toks#1+\relax+\PY@do{#2}}
+
+\expandafter\def\csname PY@tok@w\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.73,0.73}{##1}}}
+\expandafter\def\csname PY@tok@c\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.74,0.48,0.00}{##1}}}
+\expandafter\def\csname PY@tok@k\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.69,0.00,0.25}{##1}}}
+\expandafter\def\csname PY@tok@o\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ow\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@ne\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.82,0.25,0.23}{##1}}}
+\expandafter\def\csname PY@tok@nv\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@no\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ni\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.60,0.60,0.60}{##1}}}
+\expandafter\def\csname PY@tok@na\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.49,0.56,0.16}{##1}}}
+\expandafter\def\csname PY@tok@nt\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@s\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sd\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@si\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@se\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sr\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@ss\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sx\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@m\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@gh\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gu\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.50,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gr\endcsname{\def\PY@tc##1{\textcolor[rgb]{1.00,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ge\endcsname{\let\PY@it=\textit}
+\expandafter\def\csname PY@tok@gs\endcsname{\let\PY@bf=\textbf}
+\expandafter\def\csname PY@tok@gp\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@go\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.53,0.53}{##1}}}
+\expandafter\def\csname PY@tok@gt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.27,0.87}{##1}}}
+\expandafter\def\csname PY@tok@err\endcsname{\def\PY@bc##1{\setlength{\fboxsep}{0pt}\fcolorbox[rgb]{1.00,0.00,0.00}{1,1,1}{\strut ##1}}}
+\expandafter\def\csname PY@tok@kc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kd\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kr\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@bp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@fm\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@vc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vg\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vm\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sa\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@dl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@s2\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@s1\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@mb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@il\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mo\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ch\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cm\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cpf\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@c1\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cs\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+
+\def\PYZbs{\char`\\}
+\def\PYZus{\char`\_}
+\def\PYZob{\char`\{}
+\def\PYZcb{\char`\}}
+\def\PYZca{\char`\^}
+\def\PYZam{\char`\&}
+\def\PYZlt{\char`\<}
+\def\PYZgt{\char`\>}
+\def\PYZsh{\char`\#}
+\def\PYZpc{\char`\%}
+\def\PYZdl{\char`\$}
+\def\PYZhy{\char`\-}
+\def\PYZsq{\char`\'}
+\def\PYZdq{\char`\"}
+\def\PYZti{\char`\~}
+% for compatibility with earlier versions
+\def\PYZat{@}
+\def\PYZlb{[}
+\def\PYZrb{]}
+\makeatother
+
+
+    % For linebreaks inside Verbatim environment from package fancyvrb. 
+    \makeatletter
+        \newbox\Wrappedcontinuationbox 
+        \newbox\Wrappedvisiblespacebox 
+        \newcommand*\Wrappedvisiblespace {} 
+        \newcommand*\Wrappedcontinuationsymbol {} 
+        \newcommand*\Wrappedcontinuationindent {3ex } 
+        \newcommand*\Wrappedafterbreak {\kern\Wrappedcontinuationindent\copy\Wrappedcontinuationbox} 
+        % Take advantage of the already applied Pygments mark-up to insert 
+        % potential linebreaks for TeX processing. 
+        %        {, <, #, %, $, ' and ": go to next line. 
+        %        _, }, ^, &, >, - and ~: stay at end of broken line. 
+        % Use of \textquotesingle for straight quote. 
+        \newcommand*\Wrappedbreaksatspecials {% 
+            \def\PYGZus{\discretionary{\char`\_}{\Wrappedafterbreak}{\char`\_}}% 
+            \def\PYGZob{\discretionary{}{\Wrappedafterbreak\char`\{}{\char`\{}}% 
+            \def\PYGZcb{\discretionary{\char`\}}{\Wrappedafterbreak}{\char`\}}}% 
+            \def\PYGZca{\discretionary{\char`\^}{\Wrappedafterbreak}{\char`\^}}% 
+            \def\PYGZam{\discretionary{\char`\&}{\Wrappedafterbreak}{\char`\&}}% 
+            \def\PYGZlt{\discretionary{}{\Wrappedafterbreak\char`\<}{\char`\<}}% 
+            \def\PYGZgt{\discretionary{\char`\>}{\Wrappedafterbreak}{\char`\>}}% 
+            \def\PYGZsh{\discretionary{}{\Wrappedafterbreak\char`\#}{\char`\#}}% 
+            \def\PYGZpc{\discretionary{}{\Wrappedafterbreak\char`\%}{\char`\%}}% 
+            \def\PYGZdl{\discretionary{}{\Wrappedafterbreak\char`\$}{\char`\$}}% 
+            \def\PYGZhy{\discretionary{\char`\-}{\Wrappedafterbreak}{\char`\-}}% 
+            \def\PYGZsq{\discretionary{}{\Wrappedafterbreak\textquotesingle}{\textquotesingle}}% 
+            \def\PYGZdq{\discretionary{}{\Wrappedafterbreak\char`\"}{\char`\"}}% 
+            \def\PYGZti{\discretionary{\char`\~}{\Wrappedafterbreak}{\char`\~}}% 
+        } 
+        % Some characters . , ; ? ! / are not pygmentized. 
+        % This macro makes them "active" and they will insert potential linebreaks 
+        \newcommand*\Wrappedbreaksatpunct {% 
+            \lccode`\~`\.\lowercase{\def~}{\discretionary{\hbox{\char`\.}}{\Wrappedafterbreak}{\hbox{\char`\.}}}% 
+            \lccode`\~`\,\lowercase{\def~}{\discretionary{\hbox{\char`\,}}{\Wrappedafterbreak}{\hbox{\char`\,}}}% 
+            \lccode`\~`\;\lowercase{\def~}{\discretionary{\hbox{\char`\;}}{\Wrappedafterbreak}{\hbox{\char`\;}}}% 
+            \lccode`\~`\:\lowercase{\def~}{\discretionary{\hbox{\char`\:}}{\Wrappedafterbreak}{\hbox{\char`\:}}}% 
+            \lccode`\~`\?\lowercase{\def~}{\discretionary{\hbox{\char`\?}}{\Wrappedafterbreak}{\hbox{\char`\?}}}% 
+            \lccode`\~`\!\lowercase{\def~}{\discretionary{\hbox{\char`\!}}{\Wrappedafterbreak}{\hbox{\char`\!}}}% 
+            \lccode`\~`\/\lowercase{\def~}{\discretionary{\hbox{\char`\/}}{\Wrappedafterbreak}{\hbox{\char`\/}}}% 
+            \catcode`\.\active
+            \catcode`\,\active 
+            \catcode`\;\active
+            \catcode`\:\active
+            \catcode`\?\active
+            \catcode`\!\active
+            \catcode`\/\active 
+            \lccode`\~`\~ 	
+        }
+    \makeatother
+
+    \let\OriginalVerbatim=\Verbatim
+    \makeatletter
+    \renewcommand{\Verbatim}[1][1]{%
+        %\parskip\z@skip
+        \sbox\Wrappedcontinuationbox {\Wrappedcontinuationsymbol}%
+        \sbox\Wrappedvisiblespacebox {\FV@SetupFont\Wrappedvisiblespace}%
+        \def\FancyVerbFormatLine ##1{\hsize\linewidth
+            \vtop{\raggedright\hyphenpenalty\z@\exhyphenpenalty\z@
+                \doublehyphendemerits\z@\finalhyphendemerits\z@
+                \strut ##1\strut}%
+        }%
+        % If the linebreak is at a space, the latter will be displayed as visible
+        % space at end of first line, and a continuation symbol starts next line.
+        % Stretch/shrink are however usually zero for typewriter font.
+        \def\FV@Space {%
+            \nobreak\hskip\z@ plus\fontdimen3\font minus\fontdimen4\font
+            \discretionary{\copy\Wrappedvisiblespacebox}{\Wrappedafterbreak}
+            {\kern\fontdimen2\font}%
+        }%
+        
+        % Allow breaks at special characters using \PYG... macros.
+        \Wrappedbreaksatspecials
+        % Breaks at punctuation characters . , ; ? ! and / need catcode=\active 	
+        \OriginalVerbatim[#1,codes*=\Wrappedbreaksatpunct]%
+    }
+    \makeatother
+
+    % Exact colors from NB
+    \definecolor{incolor}{HTML}{303F9F}
+    \definecolor{outcolor}{HTML}{D84315}
+    \definecolor{cellborder}{HTML}{CFCFCF}
+    \definecolor{cellbackground}{HTML}{F7F7F7}
+    
+    % prompt
+    \makeatletter
+    \newcommand{\boxspacing}{\kern\kvtcb@left@rule\kern\kvtcb@boxsep}
+    \makeatother
+    \newcommand{\prompt}[4]{
+        \ttfamily\llap{{\color{#2}[#3]:\hspace{3pt}#4}}\vspace{-\baselineskip}
+    }
+    
+
+    
+    % Prevent overflowing lines due to hard-to-break entities
+    \sloppy 
+    % Setup hyperref package
+    \hypersetup{
+      breaklinks=true,  % so long urls are correctly broken across lines
+      colorlinks=true,
+      urlcolor=urlcolor,
+      linkcolor=linkcolor,
+      citecolor=citecolor,
+      }
+    % Slightly bigger margins than the latex defaults
+    
+    \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+    
+    \pagenumbering{gobble}
+
+\begin{document}
+    
+\section*{C \hspace{0.2in} Experimental Details}
+    \hypertarget{import-modules}{%
+\section{Import Modules}\label{import-modules}}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{1}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+\PY{k+kn}{from} \PY{n+nn}{fourrooms} \PY{k+kn}{import} \PY{n}{Fourrooms}
+\PY{k+kn}{from} \PY{n+nn}{IPython}\PY{n+nn}{.}\PY{n+nn}{display} \PY{k+kn}{import} \PY{n}{clear\PYZus{}output}
+\PY{k+kn}{from} \PY{n+nn}{aoaoc\PYZus{}tabular} \PY{k+kn}{import} \PY{o}{*}
+\PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{pyplot} \PY{k}{as} \PY{n+nn}{plt}
+\PY{k+kn}{from} \PY{n+nn}{visualize} \PY{k+kn}{import} \PY{n}{Visualization}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \hypertarget{hyperparameters}{%
+\section{HyperParameters}\label{hyperparameters}}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{2}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{c+c1}{\PYZsh{} Replace the command line argparse}
+\PY{k}{class} \PY{n+nc}{Arguments}\PY{p}{:}
+    \PY{k}{def} \PY{n+nf+fm}{\PYZus{}\PYZus{}init\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{)}\PY{p}{:}
+        \PY{c+c1}{\PYZsh{} Numbers}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{nepisodes}\PY{o}{=}\PY{l+m+mi}{3000}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{nsteps}\PY{o}{=}\PY{l+m+mi}{2000}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{noptions}\PY{o}{=}\PY{l+m+mi}{2}
+        
+        \PY{c+c1}{\PYZsh{} Learning Rates}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{lr\PYZus{}term}\PY{o}{=}\PY{l+m+mf}{0.25}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{lr\PYZus{}intra}\PY{o}{=}\PY{l+m+mf}{0.25}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{lr\PYZus{}critic}\PY{o}{=}\PY{l+m+mf}{0.5}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{lr\PYZus{}criticA}\PY{o}{=}\PY{l+m+mf}{0.5}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{lr\PYZus{}attend}\PY{o}{=}\PY{l+m+mf}{0.01}
+        
+        \PY{c+c1}{\PYZsh{} Environment Parameters}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{discount}\PY{o}{=}\PY{l+m+mf}{0.99}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{punishEachStep} \PY{o}{=} \PY{k+kc}{True}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{modified} \PY{o}{=} \PY{k+kc}{True}
+        
+        \PY{c+c1}{\PYZsh{} Attention Parameters}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{h\PYZus{}learn} \PY{o}{=} \PY{k+kc}{True}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{normalize} \PY{o}{=} \PY{k+kc}{True}
+               
+        \PY{c+c1}{\PYZsh{} Policy Parameters}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{epsilon}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}1}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{temp}\PY{o}{=}\PY{l+m+mf}{2.}
+        
+        \PY{c+c1}{\PYZsh{} Objective Parameters}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{wo1} \PY{o}{=} \PY{l+m+mf}{0.1}   \PY{c+c1}{\PYZsh{}q}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{wo2} \PY{o}{=} \PY{l+m+mf}{1.}    \PY{c+c1}{\PYZsh{}cosim}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{wo3} \PY{o}{=} \PY{l+m+mf}{0.}    \PY{c+c1}{\PYZsh{}entropy}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{wo4} \PY{o}{=} \PY{l+m+mf}{0.}    \PY{c+c1}{\PYZsh{}size}
+        
+        \PY{c+c1}{\PYZsh{} Randomness Parameters}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{seed}\PY{o}{=}\PY{l+m+mi}{2222}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{seed\PYZus{}startstate}\PY{o}{=}\PY{l+m+mi}{1111}
+        
+        \PY{c+c1}{\PYZsh{} Display Parameters}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{showMap} \PY{o}{=} \PY{k+kc}{False}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{showAttention} \PY{o}{=} \PY{k+kc}{False}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{showOptPref} \PY{o}{=} \PY{k+kc}{False}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{showFrequency} \PY{o}{=} \PY{l+m+mi}{10}
+        
+        \PY{c+c1}{\PYZsh{} Other Parameters}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{baseline}\PY{o}{=}\PY{k+kc}{True}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{dc} \PY{o}{=} \PY{l+m+mf}{2.}
+        
+        
+\PY{n}{args} \PY{o}{=} \PY{n}{Arguments}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \hypertarget{run}{%
+\section{Run}\label{run}}
+
+    \hypertarget{set-up}{%
+\subsection{Set up}\label{set-up}}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{3}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{rng} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{RandomState}\PY{p}{(}\PY{n}{args}\PY{o}{.}\PY{n}{seed}\PY{p}{)}
+\PY{n}{env} \PY{o}{=} \PY{n}{Fourrooms}\PY{p}{(}\PY{n}{args}\PY{o}{.}\PY{n}{seed\PYZus{}startstate}\PY{p}{,} \PY{n}{args}\PY{o}{.}\PY{n}{punishEachStep}\PY{p}{,} \PY{n}{args}\PY{o}{.}\PY{n}{modified}\PY{p}{)}
+
+\PY{n}{features} \PY{o}{=} \PY{n}{Tabular}\PY{p}{(}\PY{n}{env}\PY{o}{.}\PY{n}{observation\PYZus{}space}\PY{p}{)}
+\PY{n}{nfeatures}\PY{p}{,} \PY{n}{nactions} \PY{o}{=} \PY{n+nb}{len}\PY{p}{(}\PY{n}{features}\PY{p}{)}\PY{p}{,} \PY{n}{env}\PY{o}{.}\PY{n}{action\PYZus{}space}
+
+\PY{n}{viz} \PY{o}{=} \PY{n}{Visualization}\PY{p}{(}\PY{n}{env}\PY{p}{,} \PY{n}{args}\PY{p}{,} \PY{n}{nactions}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \hypertarget{main-loop}{%
+\subsection{Main loop}\label{main-loop}}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{ }{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{c+c1}{\PYZsh{} Set up classes}
+\PY{n}{policy\PYZus{}over\PYZus{}options} \PY{o}{=} \PY{n}{POO}\PY{p}{(}\PY{n}{rng}\PY{p}{,} \PY{n}{nfeatures}\PY{p}{,} \PY{n}{args}\PY{p}{)}
+\PY{n}{CoSimObj}\PY{o}{.}\PY{n}{reset}\PY{p}{(}\PY{p}{)}
+\PY{n}{options} \PY{o}{=} \PY{p}{[}\PY{n}{Option}\PY{p}{(}\PY{n}{rng}\PY{p}{,} \PY{n}{nfeatures}\PY{p}{,} \PY{n}{nactions}\PY{p}{,} \PY{n}{args}\PY{p}{,} \PY{n}{policy\PYZus{}over\PYZus{}options}\PY{p}{,} \PY{n}{i}\PY{p}{)} \PY{k}{for} \PY{n}{i} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{args}\PY{o}{.}\PY{n}{noptions}\PY{p}{)}\PY{p}{]}
+
+\PY{c+c1}{\PYZsh{} Loop through games}
+\PY{k}{for} \PY{n}{episode} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{args}\PY{o}{.}\PY{n}{nepisodes}\PY{p}{)}\PY{p}{:}
+    \PY{c+c1}{\PYZsh{} Initial state}
+    \PY{n}{return\PYZus{}per\PYZus{}episode} \PY{o}{=} \PY{l+m+mf}{0.0}
+    \PY{n}{observation} \PY{o}{=} \PY{n}{env}\PY{o}{.}\PY{n}{reset}\PY{p}{(}\PY{p}{)}
+    \PY{n}{phi} \PY{o}{=} \PY{n}{features}\PY{p}{(}\PY{n}{observation}\PY{p}{)}    
+    \PY{n}{option} \PY{o}{=} \PY{n}{policy\PYZus{}over\PYZus{}options}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+    \PY{n}{action} \PY{o}{=} \PY{n}{options}\PY{p}{[}\PY{n}{option}\PY{p}{]}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+    \PY{n}{traject} \PY{o}{=} \PY{p}{[}\PY{p}{[}\PY{n}{phi}\PY{p}{,}\PY{n}{option}\PY{p}{]}\PY{p}{,}\PY{p}{[}\PY{n}{phi}\PY{p}{,}\PY{n}{option}\PY{p}{]}\PY{p}{,}\PY{n}{action}\PY{p}{]}
+    \PY{n}{viz}\PY{o}{.}\PY{n}{resetMap}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+
+    \PY{c+c1}{\PYZsh{} Reset record}
+    \PY{n}{cumreward} \PY{o}{=} \PY{l+m+mf}{0.}
+    \PY{n}{duration} \PY{o}{=} \PY{l+m+mi}{1}
+    \PY{n}{option\PYZus{}switches} \PY{o}{=} \PY{l+m+mi}{0}
+    \PY{n}{avgduration} \PY{o}{=} \PY{l+m+mf}{0.}
+
+    \PY{c+c1}{\PYZsh{} Loop through frames in 1 game}
+    \PY{k}{for} \PY{n}{step} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{args}\PY{o}{.}\PY{n}{nsteps}\PY{p}{)}\PY{p}{:}
+        \PY{c+c1}{\PYZsh{} Collect feedback from environment}
+        \PY{n}{observation}\PY{p}{,} \PY{n}{reward}\PY{p}{,} \PY{n}{done}\PY{p}{,} \PY{n}{\PYZus{}} \PY{o}{=} \PY{n}{env}\PY{o}{.}\PY{n}{step}\PY{p}{(}\PY{n}{action}\PY{p}{)}
+        \PY{n}{phi} \PY{o}{=} \PY{n}{features}\PY{p}{(}\PY{n}{observation}\PY{p}{)}
+        \PY{n}{return\PYZus{}per\PYZus{}episode} \PY{o}{+}\PY{o}{=} \PY{n+nb}{pow}\PY{p}{(}\PY{n}{args}\PY{o}{.}\PY{n}{discount}\PY{p}{,}\PY{n}{step}\PY{p}{)}\PY{o}{*}\PY{n}{reward}
+
+        \PY{c+c1}{\PYZsh{} Render}
+        \PY{k}{if} \PY{n}{args}\PY{o}{.}\PY{n}{showMap} \PY{o+ow}{and} \PY{n}{episode} \PY{o}{\PYZpc{}} \PY{l+m+mi}{100} \PY{o}{==} \PY{l+m+mi}{99}\PY{p}{:}
+            \PY{n}{clear\PYZus{}output}\PY{p}{(}\PY{n}{wait}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+            \PY{n}{viz}\PY{o}{.}\PY{n}{showMap}\PY{p}{(}\PY{n}{phi}\PY{p}{,} \PY{n}{option}\PY{p}{)}
+
+        \PY{c+c1}{\PYZsh{} Store option index}
+        \PY{n}{last\PYZus{}option} \PY{o}{=} \PY{n}{option}
+
+        \PY{c+c1}{\PYZsh{} Check termination}
+        \PY{n}{termination} \PY{o}{=} \PY{n}{options}\PY{p}{[}\PY{n}{option}\PY{p}{]}\PY{o}{.}\PY{n}{terminate}\PY{p}{(}\PY{n}{phi}\PY{p}{,} \PY{n}{value}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+        \PY{k}{if} \PY{n}{options}\PY{p}{[}\PY{n}{option}\PY{p}{]}\PY{o}{.}\PY{n}{terminate}\PY{p}{(}\PY{n}{phi}\PY{p}{)}\PY{p}{:}
+            \PY{n}{option} \PY{o}{=} \PY{n}{policy\PYZus{}over\PYZus{}options}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+            \PY{n}{option\PYZus{}switches} \PY{o}{+}\PY{o}{=} \PY{l+m+mi}{1}
+            \PY{n}{avgduration} \PY{o}{+}\PY{o}{=} \PY{p}{(}\PY{l+m+mf}{1.}\PY{o}{/}\PY{n}{option\PYZus{}switches}\PY{p}{)}\PY{o}{*}\PY{p}{(}\PY{n}{duration} \PY{o}{\PYZhy{}} \PY{n}{avgduration}\PY{p}{)}
+            \PY{n}{duration} \PY{o}{=} \PY{l+m+mi}{1}
+
+        \PY{c+c1}{\PYZsh{} Record into trajectory}
+        \PY{n}{traject}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{=} \PY{n}{traject}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}
+        \PY{n}{traject}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{=} \PY{p}{[}\PY{n}{phi}\PY{p}{,} \PY{n}{option}\PY{p}{]}
+        \PY{n}{traject}\PY{p}{[}\PY{l+m+mi}{2}\PY{p}{]} \PY{o}{=} \PY{n}{action}
+
+        \PY{c+c1}{\PYZsh{} Sample next action}
+        \PY{n}{action} \PY{o}{=} \PY{n}{options}\PY{p}{[}\PY{n}{option}\PY{p}{]}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+
+        \PY{c+c1}{\PYZsh{} Policy Evaluation + Policy Improvement}
+        \PY{n}{baseline} \PY{o}{=} \PY{n}{policy\PYZus{}over\PYZus{}options}\PY{o}{.}\PY{n}{value}\PY{p}{(}\PY{n}{traject}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{traject}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}
+        \PY{n}{advantage} \PY{o}{=} \PY{n}{policy\PYZus{}over\PYZus{}options}\PY{o}{.}\PY{n}{advantage}\PY{p}{(}\PY{n}{phi}\PY{p}{,} \PY{n}{last\PYZus{}option}\PY{p}{)}
+        \PY{n}{options}\PY{p}{[}\PY{n}{last\PYZus{}option}\PY{p}{]}\PY{o}{.}\PY{n}{update}\PY{p}{(}\PY{n}{traject}\PY{p}{,} \PY{n}{reward}\PY{p}{,} \PY{n}{done}\PY{p}{,} \PY{n}{phi}\PY{p}{,} \PY{n}{last\PYZus{}option}\PY{p}{,} \PY{n}{termination}\PY{p}{,} \PY{n}{baseline}\PY{p}{,} \PY{n}{advantage}\PY{p}{)}
+        \PY{n}{policy\PYZus{}over\PYZus{}options}\PY{o}{.}\PY{n}{update}\PY{p}{(}\PY{n}{traject}\PY{p}{,} \PY{n}{reward}\PY{p}{,} \PY{n}{done}\PY{p}{,} \PY{n}{termination}\PY{p}{)}
+
+        \PY{c+c1}{\PYZsh{} End of frame}
+        \PY{n}{cumreward} \PY{o}{+}\PY{o}{=} \PY{n}{reward}
+        \PY{n}{duration} \PY{o}{+}\PY{o}{=} \PY{l+m+mi}{1}
+        \PY{k}{if} \PY{n}{done}\PY{p}{:}
+            \PY{k}{break}
+
+    \PY{c+c1}{\PYZsh{} Attention graph}
+    \PY{k}{if} \PY{n}{episode} \PY{o}{\PYZpc{}} \PY{n}{args}\PY{o}{.}\PY{n}{showFrequency} \PY{o}{==} \PY{l+m+mi}{0}\PY{p}{:}
+        \PY{k}{if} \PY{n}{args}\PY{o}{.}\PY{n}{showAttention}\PY{p}{:}
+            \PY{n}{clear\PYZus{}output}\PY{p}{(}\PY{n}{wait}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+            \PY{n}{viz}\PY{o}{.}\PY{n}{showAttention}\PY{p}{(}\PY{n}{options}\PY{p}{)}
+            \PY{n+nb}{print}\PY{p}{(}\PY{n}{options}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{policy}\PY{o}{.}\PY{n}{attention}\PY{o}{.}\PY{n}{weights}\PY{p}{)}
+        \PY{k}{if} \PY{n}{args}\PY{o}{.}\PY{n}{showOptPref}\PY{p}{:}
+            \PY{n}{clear\PYZus{}output}\PY{p}{(}\PY{n}{wait}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+    \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Episode }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{ steps }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{ cumreward }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{ avg. duration }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{ switches }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{episode}\PY{p}{,} \PY{n}{step}\PY{p}{,} \PY{n}{cumreward}\PY{p}{,} \PY{n}{avgduration}\PY{p}{,} \PY{n}{option\PYZus{}switches}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \hypertarget{visualization}{%
+\section{Visualization}\label{visualization}}
+
+    \hypertarget{simulate-an-episode}{%
+\subsection{Simulate an episode}\label{simulate-an-episode}}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{5}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{states} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{zeros}\PY{p}{(}\PY{p}{(}\PY{l+m+mi}{13}\PY{p}{,}\PY{l+m+mi}{13}\PY{p}{)}\PY{p}{,} \PY{n}{dtype}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{int}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{occupancy} \PY{o}{=} \PY{n}{env}\PY{o}{.}\PY{n}{occupancy}\PY{o}{.}\PY{n}{astype}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{float64}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{s}\PY{o}{=}\PY{l+m+mi}{0}
+\PY{k}{for} \PY{n}{i} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{13}\PY{p}{)}\PY{p}{:}
+    \PY{k}{for} \PY{n}{j} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{13}\PY{p}{)}\PY{p}{:}
+        \PY{k}{if} \PY{n}{occupancy}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]} \PY{o}{==} \PY{l+m+mi}{0}\PY{p}{:}
+            \PY{n}{states}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]} \PY{o}{=} \PY{n}{s}
+            \PY{n}{s}\PY{o}{+}\PY{o}{=}\PY{l+m+mi}{1}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{states}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+[[  0   0   0   0   0   0   0   0   0   0   0   0   0]
+ [  0   0   1   2   3   4   0   5   6   7   8   9   0]
+ [  0  10  11  12  13  14   0  15  16  17  18  19   0]
+ [  0  20  21  22  23  24  25  26  27  28  29  30   0]
+ [  0  31  32  33  34  35   0  36  37  38  39  40   0]
+ [  0  41  42  43  44  45   0  46  47  48  49  50   0]
+ [  0   0  51   0   0   0   0  52  53  54  55  56   0]
+ [  0  57  58  59  60  61   0   0   0  62   0   0   0]
+ [  0  63  64  65  66  67   0  68  69  70  71  72   0]
+ [  0  73  74  75  76  77   0  78  79  80  81  82   0]
+ [  0  83  84  85  86  87  88  89  90  91  92  93   0]
+ [  0  94  95  96  97  98   0  99 100 101 102 103   0]
+ [  0   0   0   0   0   0   0   0   0   0   0   0   0]]
+    \end{Verbatim}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{6}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{startState} \PY{o}{=} \PY{l+m+mi}{57}
+\PY{c+c1}{\PYZsh{} Simulation}
+\PY{n}{observation} \PY{o}{=} \PY{n}{env}\PY{o}{.}\PY{n}{reset}\PY{p}{(}\PY{n}{startState}\PY{p}{)}
+\PY{n}{viz}\PY{o}{.}\PY{n}{resetMap}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+
+\PY{n}{option} \PY{o}{=} \PY{n}{policy\PYZus{}over\PYZus{}options}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+\PY{n}{action} \PY{o}{=} \PY{n}{options}\PY{p}{[}\PY{n}{option}\PY{p}{]}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+
+\PY{k}{for} \PY{n}{step} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{args}\PY{o}{.}\PY{n}{nsteps}\PY{p}{)}\PY{p}{:}
+    \PY{n}{observation}\PY{p}{,} \PY{n}{reward}\PY{p}{,} \PY{n}{done}\PY{p}{,} \PY{n}{\PYZus{}} \PY{o}{=} \PY{n}{env}\PY{o}{.}\PY{n}{step}\PY{p}{(}\PY{n}{action}\PY{p}{)}
+    \PY{n}{phi} \PY{o}{=} \PY{n}{features}\PY{p}{(}\PY{n}{observation}\PY{p}{)}
+
+    \PY{c+c1}{\PYZsh{}render}
+    \PY{n}{clear\PYZus{}output}\PY{p}{(}\PY{n}{wait}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+    \PY{n}{viz}\PY{o}{.}\PY{n}{showMap}\PY{p}{(}\PY{n}{phi}\PY{p}{,} \PY{n}{option}\PY{p}{)}
+
+    \PY{k}{if} \PY{n}{options}\PY{p}{[}\PY{n}{option}\PY{p}{]}\PY{o}{.}\PY{n}{terminate}\PY{p}{(}\PY{n}{phi}\PY{p}{)}\PY{p}{:}
+        \PY{n}{option} \PY{o}{=} \PY{n}{policy\PYZus{}over\PYZus{}options}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+
+    \PY{n}{action} \PY{o}{=} \PY{n}{options}\PY{p}{[}\PY{n}{option}\PY{p}{]}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{n}{phi}\PY{p}{)}
+
+    \PY{k}{if} \PY{n}{done}\PY{p}{:}
+        \PY{k}{break}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.2\linewidth}{0.2\paperheight}}{output_12_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \hypertarget{display-action-and-option-preference-in-each-state}{%
+\subsection{Display action and option preference in each
+state}\label{display-action-and-option-preference-in-each-state}}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{7}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{c+c1}{\PYZsh{} Display option preference}
+\PY{n}{viz}\PY{o}{.}\PY{n}{showPref}\PY{p}{(}\PY{n}{policy\PYZus{}over\PYZus{}options}\PY{o}{.}\PY{n}{weights}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.2\linewidth}{0.2\paperheight}}{output_14_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{8}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{opt} \PY{o}{=} \PY{l+m+mi}{0}
+\PY{c+c1}{\PYZsh{} Display action preference for opt}
+\PY{n}{viz}\PY{o}{.}\PY{n}{showPref}\PY{p}{(}\PY{n}{options}\PY{p}{[}\PY{n}{opt}\PY{p}{]}\PY{o}{.}\PY{n}{weights}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.2\linewidth}{0.2\paperheight}}{output_15_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \hypertarget{display-attention}{%
+\subsection{Display Attention}\label{display-attention}}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{9}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{viz}\PY{o}{.}\PY{n}{showAttention}\PY{p}{(}\PY{n}{options}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{center}
+    \adjustimage{max size={0.25\linewidth}{0.25\paperheight}}{output_17_0.png}
+    \end{center}
+
+    
+    
+\end{document}

@@ -2,28 +2,11 @@ import numpy as np
 from random import uniform
 
 class Fourrooms:
-    def __init__(self, initstate_seed, punishEachStep, deterministic, modified, easier):
+    def __init__(self, initstate_seed, punishEachStep, modified):
         self.punishEachStep = punishEachStep
-        self.deterministic = deterministic
         self.modified = modified
-        if easier:
-            self.layout = """\
-wwwwwwwwwwwww
-w           w
-w     w     w
-w     w     w
-w     w     w
-w     w     w
-w wwwww     w
-w     wwwww w
-w     w     w
-w     w     w
-w     w     w
-w           w
-wwwwwwwwwwwww
-"""
-        else:
-            self.layout = """\
+
+        self.layout = """\
 wwwwwwwwwwwww
 w     w     w
 w     w     w
@@ -38,7 +21,6 @@ w           w
 w     w     w
 wwwwwwwwwwwww
 """
-
 
         self.occupancy = np.array([list(map(lambda c: 1 if c=='w' else 0, line)) for line in self.layout.splitlines()])
 
@@ -95,12 +77,11 @@ wwwwwwwwwwwww
 
     def step(self, action):
         reward = -2 * int(self.punishEachStep)
-        if self.rng.uniform() < 1/3 and not(self.deterministic):
+        if self.rng.uniform() < 1/3:
             empty_cells = self.empty_around(self.currentcell)
             nextcell = empty_cells[self.rng.randint(len(empty_cells))]
         else:
             nextcell = tuple(self.currentcell + np.multiply(self.directions[action], self.inQuad24(self.currentcell)))
-
 
         if not self.occupancy[nextcell]:
             self.currentcell = nextcell

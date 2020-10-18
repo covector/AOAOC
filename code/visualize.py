@@ -52,23 +52,6 @@ class Visualization:
         plt.imshow(pref, vmax=255, vmin=0)
         plt.show()
 
-    def savePref(self, weight, algo=None, wo=None, dc=None, run=None):
-        pref = np.zeros((13,13,3), dtype="int")
-        for i in range(13):
-            for j in range(13):
-                if self.occupancy[i,j] == 0:
-                    choice = np.argmax(weight[self.tostate[(i,j)],:])
-                    pref[i,j] = np.array(self.colorList[choice])
-                else:
-                    pref[i,j] = np.array([255,255,255]) 
-        plt.figure(figsize=(5,5))
-        plt.subplot(111)
-        plt.imshow(pref, vmax=255, vmin=0)
-        if wo != None:
-            plt.savefig("../result2/{0}/wo_{1}/dc_{2}/run_{3}.png".format(algo, str(wo), str(dc), str(run)))
-        else:
-            plt.savefig("../result2/{0}/dc_{1}/run_{2}.png".format(algo, str(dc), str(run)))
-
     def resetMap(self, phi):
         self.screen = np.array([list(map(lambda c: [0,0,0] if c=='w' else [255,255,255], line)) for line in self.layout.splitlines()])
         self.lastphi = phi

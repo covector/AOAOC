@@ -11,6 +11,7 @@
 \usepackage{tikz}
 \usepackage{dsfont}
 \usepackage{listings}
+\usepackage{pdfpages}
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
@@ -84,6 +85,7 @@
 	\item\relax}
 {\endlist}
 \date{}
+
 \begin{document}
 	\begin{center}
 		\large{\rule{420pt}{0.4pt}}\\
@@ -290,7 +292,7 @@
 	$$\nu \leftarrow \nu + \alpha_\nu \nabla_\nu U_\Omega(s',\omega)$$
 	\qquad \ where $\theta$ and $\nu$ are the parameters for the internal policy and termination function respectively, $Q_\Omega(s,\omega)$ and $U_\Omega(s',\omega)$ are the expected return for choosing the option $\omega$ in state $s$ and entering the state $s$ when using option $\omega$ respectively.
 	
-	\quad I can directly reuse the result from the Option-Critic paper:
+	\quad I can directly reuse the result from the Option-Critic paper\cite{bacon2016optioncritic}:
 	$$\nabla_\theta Q_\Omega(s,\omega) = E[\nabla_\theta \log \pi_{\omega, \theta}(a|s) Q_U(s,\omega,a)]$$
 	$$\nabla_\nu U_\Omega(s',\omega) = E[\nabla_\nu \beta_{\omega, \nu}(s') A(s',\omega)]$$
 	\qquad where $Q_U(s,\omega,a)$ is the expected return for choosing action $a$ when using option $\omega$ in state $s$.
@@ -443,27 +445,54 @@
 	\begin{figure}[h]
 		\centering
 		\large{(a)}
-		\includegraphics[width=1.5in]{cherryPicked.png}
+		\includegraphics[width=1.5in]{goodPicked.png}
 		\hspace{0.2in}
 		\large{(b)}
-		\includegraphics[width=1.5in]{nonPicked.png}
+		\includegraphics[width=1.5in]{badPicked.png}
 		\caption{Localization only occurs sometimes. (a) is a cherry-picked result that localization has been achieved. (b) is what the result looks with the same hyperparameters.}
 	\end{figure}
 
-	\quad AOAOC with deliberation cost and Deliberation Cost alone seem to produce pretty similar results. This means that probably the localization is only achieved because of the deliberation cost.
+	\quad AOAOC with deliberation cost and Deliberation Cost alone seem to produce pretty similar results. The state space is divided into regions when using either algorithms. This means that probably the localization is only achieved because of the deliberation cost.
 	
 	\quad Even though there seems to be no benefit in using attention mechanism from the above results, in theory, localized options produced by AOAOC should be more meaningful than that produced by deliberation cost. Deliberation cost group states that are close together into a sub-task, while AOAOC should group actions that are used consecutively into a sub-task.
 	
-	\quad This is why I changed the environment to make it easier. I switched the left and right action in the top-right and bottom-left room. This way navigating each room should only need 2 of the actions, and also the 2 actions needed in a room is completely different from its neighboring rooms.
+	\quad This is why I modified the environment to make it easier. I switched the left and right action in the top-right and bottom-left room. This way navigating each room should only need 2 of the actions, and also the 2 actions needed in a room is completely different from its neighboring rooms.
 	\begin{figure}[h]
 		\centering
 		\includegraphics[width=1.5in]{after.png}
 		\caption{The left and right actions in the blue area is switched. So in the white area, only the up and right actions are needed. While in the blue area, only the down and left actions are needed.}
 	\end{figure}
 
-	\quad sort of success but may be overfitting
+	\quad What I expect to see is that 1 option is responsible for the top-left and bottom-right rooms, while the other is responsible for the top-right and bottom-left rooms. So I did an experiment in four scenario (Result are shown in Appendix D):
+	
+	\qquad 1. Using AOAOC in unmodified Four Rooms
+	
+	\qquad 2. Using AOAOC in modified Four Rooms
+	
+	\qquad 3. Using Deliberation Cost in unmodified Four Rooms
+	
+	\qquad 4. Using Deliberation Cost in modified Four Rooms
+	
+	\quad When looking at the results, scenario 2 is more likely to have 1 option for the top-left and bottom-right rooms, while another option for the top-right and bottom-left rooms. However, there are quite a lot of times where the options discovered is not like this.
+	\begin{figure}[h]
+		\centering
+		\large{(a)}
+		\includegraphics[width=1.5in]{goodPicked2.png}
+		\hspace{0.2in}
+		\large{(b)}
+		\includegraphics[width=1.5in]{badPicked2.png}
+		\caption{(a) is again a cherry-picked result that localization has been achieved. (b) is from the same hyperparameters but did not achieve localization.}
+	\end{figure}
 	\section{Conclusion}
-	\qquad \ 
+	\qquad \ Even though the results in the experiments is in favour of the algorithm AOAOC. This may not means that AOAOC can produce meaningful localized options, because the modified Four Rooms is tailor made to fit this algorithm. Despite this, the algorithm fails to divide the state space into regions in a lot of times.
+	
+	\quad The fact that this algorithm perform poorly in Four Room has several possible reason.
+	
+	\quad First, the action space is too small. This made the need for using attention questionable, because an abstraction over action space is not really needed.
+	
+	\quad Second, the attention mechanism learning in the algorithm is flawed. The objectives that I gave the algorithm is just based on intuition, what makes an attention mechanism good is still an unanswered question.
+	
+	\quad All in all, this algorithm is quite weak and will need modification before it can give desirable results. Going back to the research question, the Localization Framework I proposed may be how localized options are trained in Option-Critic, this can be easily verify if the algorithm developed afterward successfully produce localized options. However, this is not the case, so there might be the framework or the algorithm that is the problem, but I do not know which one.
 	\section{Future Direction}
 	\qquad \ As mentioned before, this algorithm probably can only work in environment with large discrete action space. Hence, a possible future direction is trying to apply this in an environment which has a large action space.
 	
@@ -522,7 +551,7 @@
 	Let $h_\omega^a$ be the element in the attention vector $h_\omega$ that corresponds to the action $a$, i.e. $h_\omega = [h_\omega^{a_0}, h_\omega^{a_1}, ...]$
 	$$\frac{\partial Q_\Omega(s,\omega)}{\partial h_\omega^a} = \sum_{s,\omega} \mu_\Omega(s,\omega|s_0, \omega_0)\sum_a \frac{\partial \pi_{h_\omega} (a|s)}{\partial h_\omega^a} Q_U(s,\omega,a)$$
 	$$= E_{s,\omega,a \sim \pi_{h_\omega}}[\frac{\partial \log \pi_{h_\omega}(a|s)}{\partial h_\omega^a}Q_U(s,\omega,a)]$$
-	The steps above follows directly from the Option-Critic appendix. The next step is to express $\frac{\partial \log \pi_{h_\omega} (a|s)}{\partial h_\omega^a}$ in a simpler form.
+	The steps above follows directly from the Option-Critic appendix \cite{bacon2016optioncritic}. The next step is to express $\frac{\partial \log \pi_{h_\omega} (a|s)}{\partial h_\omega^a}$ in a simpler form.
 	$$\frac{\partial \log \pi_{h_\omega} (a|s)}{\partial h_\omega^a} = \frac{\partial}{\partial h_\omega^a} [\log\frac{\pi_\omega(a|s)h_\omega^a}{\sum_{a'} \pi_\omega(a'|s)h_\omega^{a'}}]$$
 	$$=\frac{\partial}{\partial h_\omega^a} [\log\pi_\omega(a|s) + \log h_\omega^a - \log\sum_{a'}\pi_\omega(a'|s)h_\omega^{a'}]$$
 	$$=\frac{\partial}{\partial h_\omega^a} [\log\pi_\omega(a|s)] + \frac{\partial}{\partial h_\omega^a}[\log h_\omega^a] - \frac{\partial}{\partial h_\omega^a}[\log\sum_{a'}\pi_\omega(a'|s)h_\omega^{a'}]$$
@@ -564,57 +593,68 @@
 	Since we would like to minimize the length, the negative length will be used instead.
 	$$\frac{\partial ||h_\omega||}{\partial h_\omega^a} = \frac{\partial}{\partial h_\omega^a} \sqrt{\sum_{a'} (h_\omega^{a'})^2}$$
 	$$= \frac{h_\omega^a}{\sqrt{\sum_{a'} (h_\omega^{a'})^2}} = \frac{h_\omega^a}{||h_\omega||}$$
-	\section{Experimental Details}
+	\includepdf[
+	%% Include all pages of the PDF
+	pages=-,
+	%% make this page have the usual page style
+	%% (you can change it to plain etc). By default pdfpages
+	%% sets the pagecommand to \pagestyle{empty}
+	pagecommand={\pagestyle{headings}},  
+	%% Add a "section" entry to the ToC with the heading
+	%% "Quilling Shapes" and the label "sec:shapes"
+	addtotoc={1,section,1,Quilling Shapes,sec:shapes}]
+	%% The pdf file itself
+	{jupyterExperiment/Experiment.pdf}
 	\section{Experimental Results}
 	\subsection*{AOAOC in Unmodified Four Rooms}
 	\begin{figure}[H]
 		\centering
 		\begin{tabular}{ccccc}
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_0.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_1.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_2.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_3.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_1/run_4.png}} \\		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_0.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_1.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_2.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_3.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_1/run_4.png}} \\
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_0.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_1.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_2.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_3.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_1/run_4.png}} \\
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_0.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_1.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_2.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_3.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_1/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_1/run_4.png}} \\		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_1/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_1/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_1/run_4.png}} \\
 		\end{tabular}
 		\caption{Deliberation Cost = 1. Learning rate of attention mechanism = 0.01, 0.05, 0.1 and 0.2 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
 	\end{figure}
 	\begin{figure}[H]
 	\centering
 	\begin{tabular}{ccccc}
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_0.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_1.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_2.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_3.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.01/dc_2/run_4.png}} \\
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_0.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_1.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_2.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_3.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.05/dc_2/run_4.png}} \\
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_0.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_1.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_2.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_3.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.1/dc_2/run_4.png}} \\
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_0.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_1.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_2.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_3.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/aoaoc_hard/wo_0.2/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.01/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.05/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.1/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/aoaoc_hard/wo_0.2/dc_2/run_4.png}} \\
 	\end{tabular}
 	\caption{Deliberation Cost = 2. Learning rate of attention mechanism = 0.01, 0.05, 0.1 and 0.2 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
 	\end{figure}
@@ -727,26 +767,26 @@
 	\begin{figure}[H]
 		\centering
 		\begin{tabular}{ccccc}
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_0.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_1.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_2.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_3.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_0.5/run_4.png}} \\
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_0.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_1.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_2.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_3.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_1/run_4.png}} \\
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_0.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_1.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_2.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_3.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_2/run_4.png}} \\
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_0.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_1.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_2.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_3.png}} &
-			\subfloat{\includegraphics[width=0.85in]{result/dc_hard/dc_3/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_0.5/run_0.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_0.5/run_1.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_0.5/run_2.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_0.5/run_3.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_0.5/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_1/run_0.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_1/run_1.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_1/run_2.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_1/run_3.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_1/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_2/run_0.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_2/run_1.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_2/run_2.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_2/run_3.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_2/run_4.png}} \\
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_3/run_0.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_3/run_1.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_3/run_2.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_3/run_3.png}} &
+			\subfloat{\includegraphics[width=0.8in]{result/dc_hard/dc_3/run_4.png}} \\
 		\end{tabular}
 		\caption{Deliberation Cost = 0.5, 1, 2 and 3 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
 	\end{figure}
@@ -754,26 +794,26 @@
 	\begin{figure}[H]
 	\centering
 	\begin{tabular}{ccccc}
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_0.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_1.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_2.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_3.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_0.5/run_4.png}} \\
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_0.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_1.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_2.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_3.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_1/run_4.png}} \\
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_0.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_1.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_2.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_3.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_2/run_4.png}} \\
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_0.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_1.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_2.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_3.png}} &
-		\subfloat{\includegraphics[width=0.85in]{result/dc_easy/dc_3/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_0.5/run_0.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_0.5/run_1.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_0.5/run_2.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_0.5/run_3.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_0.5/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_1/run_0.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_1/run_1.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_1/run_2.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_1/run_3.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_1/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_2/run_0.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_2/run_1.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_2/run_2.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_2/run_3.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_2/run_4.png}} \\
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_3/run_0.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_3/run_1.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_3/run_2.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_3/run_3.png}} &
+		\subfloat{\includegraphics[width=0.8in]{result/dc_easy/dc_3/run_4.png}} \\
 	\end{tabular}
 	\caption{Deliberation Cost = 0.5, 1, 2 and 3 from top to bottom. Same row means same hyperparameters, each column is a different trial. }
 	\end{figure}
